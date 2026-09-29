@@ -49,7 +49,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 | 08–10 | Dedup e separação | "Mesmo imóvel não pode estar em treino e teste. Senão o modelo acerta porque decorou." |
 | 10–13 | Baseline e treino | Rodar o baseline da mediana **antes** do modelo. O número do baseline precisa estar na tela quando o MAE do RF aparecer |
 | 13–16 | Run 1 no Experiments | `preco-imoveis-rf`, logar `params` e `metrics` (`mae`, `mae_baseline`) |
-| 16–19 | Run 2 variando um hiperparâmetro | Mudar **um** parâmetro (por exemplo `max_depth`). Um só — a comparação precisa ser legível |
+| 16–19 | Run 2 variando um hiperparâmetro | Mudar **um** parâmetro — no notebook é só o `max_depth` (12 → 24), com `n_estimators=200` nos dois runs. Um só — a comparação precisa ser legível |
 | 19–20 | Comparar no console | Vertex AI → **Experiments** → `preco-imoveis-rf` → selecionar as duas runs → **Compare** |
 
 **Conceito a fixar:** o valor do Experiments não é guardar métricas — é conseguir responder "por que esta versão é melhor que aquela?" três semanas depois, sem depender da memória de ninguém.
@@ -123,7 +123,7 @@ Conduzir **junto com a turma**, item a item, seguindo [`05-encerramento-custos.m
 |---|---|
 | 45–47 | **Undeploy** do modelo no endpoint, depois **deletar o endpoint**. Explicar por que esta é a ordem: não se apaga o modelo com ele implantado |
 | 47–49 | **Apagar o runtime** do notebook (BigQuery Studio / Colab Enterprise). Se alguém usou Workbench, **Stop** e **Delete** da instância |
-| 49–50 | **TensorBoard**: nesta aula **não criamos nenhuma instância**. Alertar que, se criarem por conta própria, há cobrança por armazenamento (na ordem de US$ 10/GiB/mês — confirmar o valor no pricing ao vivo) |
+| 49–50 | **TensorBoard**: nesta aula **não criamos nenhuma instância porque o `aiplatform.init(...)` passa `experiment_tensorboard=False`**. Deixar claro que, **sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* sozinho** ao associar o experimento — por isso conferimos a lista mesmo assim. Há cobrança por armazenamento (na ordem de US$ 10/GiB/mês — confirmar o valor no pricing ao vivo) |
 | 50–52 | Deletar **versões e modelo** e os **objetos no GCS da aula** (`gs://${PROJECT_ID}-mlops-aula/`) |
 | 52–54 | **Budget e alertas**: mostrar Billing → **Budgets & alerts** na tela; explicar que o alerta avisa, não bloqueia |
 | 54–55 | **Varredura final**: percorrer a caixa "Confira que nada ficou ligado" do [`05-encerramento-custos.md`](05-encerramento-custos.md) |

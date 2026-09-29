@@ -19,6 +19,12 @@ Este documento acompanha as **seções 1 a 5** do notebook
 > `google_vertex_ai_tensorboard`, que **não usamos** — ele é pago por armazenamento). Por isso este
 > documento tem dois blocos por passo, não três.
 
+> **Atenção ao TensorBoard automático.** Ao associar um experimento com
+> `aiplatform.init(..., experiment=...)`, o SDK **cria sozinho** uma instância *Default Tensorboard* no
+> projeto — e ela cobra por armazenamento. Nesta aula isso **não acontece porque passamos
+> `experiment_tensorboard=False`** (veja o bloco da seção 5). Sem esse parâmetro, a instância aparece; é
+> por isso que o `scripts/30_teardown.sh` verifica a lista de TensorBoards no encerramento.
+
 ---
 
 ## 1. Ler a camada gold
@@ -97,11 +103,16 @@ maioria dos projetos pula.
 def construir_pipeline(n_estimators=200, max_depth=12, random_state=42):
     return Pipeline(steps=[
         ("imputacao", SimpleImputer(strategy="median")),
+        # n_jobs=2 e 200 arvores para caber em runtimes pequenos; -1 pode estourar memoria
         ("floresta", RandomForestRegressor(
             n_estimators=n_estimators, max_depth=max_depth,
-            random_state=random_state, n_jobs=-1)),
+            random_state=random_state, n_jobs=2)),
     ])
 ```
+
+`n_jobs=-1` abre um processo por núcleo, e cada processo carrega sua própria cópia das árvores. Num
+runtime modesto (o padrão do BigQuery Studio / Colab Enterprise) isso vira `MemoryError` no meio do
+treino. `n_jobs=2` paraleliza o suficiente e mantém o consumo previsível.
 
 O pipeline é deliberadamente pequeno, e a razão é de **serving**, não de modelagem:
 
@@ -137,6 +148,9 @@ aiplatform.init(
     location="us-central1",
     experiment="preco-imoveis-rf",
     staging_bucket="gs://SEU_PROJECT_ID-mlops-aula",
+    # experiment_tensorboard=False evita criar uma instancia Default Tensorboard
+    # (metricas-resumo nao precisam dela; ver 05-encerramento-custos)
+    experiment_tensorboard=False,
 )
 
 aiplatform.start_run("run-a-20260928-140000")
@@ -156,11 +170,19 @@ Depois de dois runs, a tabela comparativa sai em uma linha:
 aiplatform.get_experiment_df("preco-imoveis-rf")
 ```
 
+O notebook roda **dois runs variando somente `max_depth`** — run A com `max_depth=12` e run B com
+`max_depth=24`, ambos com `n_estimators=200`. Mudar um parâmetro de cada vez é o que torna a comparação
+legível; e manter 200 árvores nos dois é o que mantém o treino dentro da memória do runtime.
+
 Detalhes que valem a pena:
 
 - **`log_metrics` são métricas-resumo e não exigem TensorBoard** — ou seja, praticamente sem custo.
   Evitamos de propósito `log_time_series_metrics`, que exigiria uma instância de TensorBoard **paga por
   armazenamento**;
+- **não criamos TensorBoard porque passamos `experiment_tensorboard=False`.** Sem esse parâmetro, o SDK
+  provisiona sozinho uma instância *Default Tensorboard* ao associar o experimento — mesmo que você só
+  use métricas-resumo. Com ele, `log_params` e `log_metrics` continuam funcionando normalmente e nada é
+  criado;
 - o nome do run precisa ser único dentro do experimento. O notebook carimba a hora no nome
   (`run-a-%Y%m%d-%H%M%S`) para que reexecuções não colidam;
 - os valores de `log_params` e `log_metrics` são escalares (texto, número, booleano). Listas viram texto

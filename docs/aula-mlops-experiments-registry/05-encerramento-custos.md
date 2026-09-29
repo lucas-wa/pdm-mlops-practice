@@ -18,7 +18,7 @@ Encerre **nesta ordem**. Ela não é arbitrária: além de resolver primeiro o q
 |---|---|---|---|
 | 1 | **Endpoint com modelo implantado** | Nós cobrados **por hora, 24/7**, mesmo ociosos. Não desliga sozinho | **Crítica** |
 | 2 | **Runtime do notebook** (BigQuery Studio / Colab Enterprise; ou VM do Workbench) | Cobra enquanto está ativo | Alta |
-| 3 | **Instância de TensorBoard** | Cobrança por armazenamento, na ordem de **US$ 10/GiB/mês**. **Nesta aula não criamos nenhuma** — apenas o alerta | Média (se existir) |
+| 3 | **Instância de TensorBoard** | Cobrança por armazenamento, na ordem de **US$ 10/GiB/mês**. Nesta aula **não criamos nenhuma porque passamos `experiment_tensorboard=False`** no `aiplatform.init(...)` — sem esse parâmetro o SDK criaria uma sozinha | Média (se existir) |
 | 4 | **Modelo, versões e objetos no GCS** | Custo baixo, de armazenamento | Baixa |
 
 > **Dependência que quebra o teardown:** não é possível deletar um modelo que ainda está **implantado** em um endpoint. É preciso fazer o **undeploy** primeiro. Por isso o passo 1 vem antes do passo 4 — e por isso tentar apagar o modelo primeiro gera um erro que costuma travar a turma.
@@ -154,11 +154,11 @@ gcloud workbench instances delete INSTANCE_NAME \
 
 ---
 
-## 4. Passo 3 — TensorBoard (alerta)
+## 4. Passo 3 — TensorBoard (verificação)
 
-> **Nesta aula NÃO criamos nenhuma instância de TensorBoard.** As métricas-resumo do Vertex AI Experiments (`mae`, `mae_baseline`) **não exigem TensorBoard** — por isso o rastreamento sai praticamente sem custo.
+> **Nesta aula NÃO criamos nenhuma instância de TensorBoard — porque passamos `experiment_tensorboard=False` no `aiplatform.init(...)`.** As métricas-resumo do Vertex AI Experiments (`mae`, `mae_baseline`) **não exigem TensorBoard**, e com esse parâmetro o rastreamento sai praticamente sem custo.
 
-O alerta existe porque é fácil criar uma instância sem perceber, ao seguir tutoriais que usam `log_time_series_metrics`. A cobrança é por **armazenamento**, na ordem de **US$ 10 por GiB por mês** — **confirme o valor atual no pricing do Vertex AI ao vivo**, porque preços mudam.
+**Sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* automaticamente** ao associar o experimento no `init` — não é preciso pedir nada, nem usar `log_time_series_metrics`. Por isso este passo é uma **verificação**, e não uma formalidade: se alguém rodou o `init` sem `experiment_tensorboard=False` (ou seguiu outro tutorial), a instância está lá. A cobrança é por **armazenamento**, na ordem de **US$ 10 por GiB por mês** — **confirme o valor atual no pricing do Vertex AI ao vivo**, porque preços mudam.
 
 **Console:**
 
@@ -351,7 +351,7 @@ Onde conferir: Console → **Billing** → **Overview**, no painel de créditos 
 > |---|---|---|
 > | 1 | Vertex AI → Online prediction → **Endpoints** | Lista **vazia** (nenhum `rf-preco-imoveis-endpoint`) |
 > | 2 | Vertex AI → Colab Enterprise → **Runtimes** · e Workbench → **Instances** | **Nenhum** runtime ativo, **nenhuma** instância ligada |
-> | 3 | Vertex AI → Experiments → **TensorBoard instances** | Lista **vazia** |
+> | 3 | Vertex AI → Experiments → **TensorBoard instances** | Lista **vazia** (é o que se espera com `experiment_tensorboard=False`; confira mesmo assim) |
 > | 4 | Vertex AI → **Model Registry** | Sem `rf-preco-imoveis` |
 > | 5 | Cloud Storage → **`${PROJECT_ID}-mlops-aula`** | Sem os objetos em `models/` |
 >
@@ -380,7 +380,7 @@ As três primeiras devem voltar vazias para os recursos da aula.
 
 | Recurso | Cobra quando | Encerra como |
 |---|---|---|
-| Vertex AI **Experiments** (métricas-resumo) | Praticamente não cobra — sem TensorBoard | Pode ficar |
+| Vertex AI **Experiments** (métricas-resumo) | Praticamente não cobra — desde que o `init` use `experiment_tensorboard=False` e nenhum TensorBoard seja criado | Pode ficar |
 | **Model Registry** | Registrar é **grátis**; paga-se o artefato no GCS | Deletar versões e modelo |
 | **Endpoint** com modelo implantado | **Por node-hora, 24/7, mesmo ocioso** | **Undeploy → delete** |
 | **Runtime** do notebook | Enquanto ativo (auto-shutdown ~180 min) | Deletar o runtime |

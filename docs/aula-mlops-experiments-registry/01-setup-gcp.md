@@ -456,7 +456,9 @@ Detalhamento dos pontos que mais confundem:
   Experiment é criado implicitamente pelo SDK Python na primeira chamada de
   `aiplatform.init(..., experiment="preco-imoveis-rf")`. O único vizinho disponível em IaC é
   `google_vertex_ai_tensorboard` — que **não usamos**, porque cobra armazenamento e as
-  métricas-resumo desta aula não precisam dele.
+  métricas-resumo desta aula não precisam dele. Atenção: esse `init` **cria uma instância
+  *Default Tensorboard* sozinho** se você não passar `experiment_tensorboard=False` — o notebook
+  da aula passa (veja `02-treino-e-experiments.md`).
 - **Não existe resource para o deploy do *seu* modelo em um endpoint.** O
   `google_vertex_ai_endpoint` cria o endpoint vazio; associar uma versão de modelo a ele
   (`deployedModels`, tipo de máquina, réplicas) é feito por SDK/gcloud.

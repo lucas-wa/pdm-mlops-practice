@@ -9,7 +9,8 @@
 # Ordem executada:
 #   1. undeploy do(s) modelo(s) no endpoint  -> depois delete do endpoint
 #   2. runtime do notebook (BigQuery Studio / Colab Enterprise / Workbench)
-#   3. instancia de TensorBoard, se existir   (a aula NAO cria; ver DELETE_TENSORBOARD)
+#   3. instancia de TensorBoard, se existir   (a aula nao cria SE experiment_tensorboard=False;
+#                                              verificamos por seguranca; ver DELETE_TENSORBOARD)
 #   4. versoes e modelo no Model Registry
 #   5. objetos e bucket DEDICADO da aula no Cloud Storage
 #
@@ -31,7 +32,9 @@
 #   ZONE                Padrao us-central1-a (usada so para procurar Workbench).
 #   DELETE_BUCKET       "true" (padrao): apaga o bucket dedicado da aula.
 #                       "false": apaga so os objetos em models/rf/ e mantem o bucket.
-#   DELETE_TENSORBOARD  "false" (padrao). A aula nao cria TensorBoard; se houver
+#   DELETE_TENSORBOARD  "false" (padrao). A aula nao cria TensorBoard SE o aiplatform.init(...)
+#                       passar experiment_tensorboard=False; sem esse parametro o SDK cria uma
+#                       instancia Default Tensorboard sozinho. Verificamos por seguranca: se houver
 #                       instancias no projeto, elas podem ser de outra atividade.
 #                       Use "true" so se tiver certeza de que sao suas.
 #   DRY_RUN             "true" mostra o que seria removido, sem remover nada.
@@ -183,7 +186,8 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 3. TensorBoard (a aula NAO cria; cobranca por armazenamento)
+# 3. TensorBoard (a aula nao cria SE experiment_tensorboard=False; verificamos por seguranca,
+#    porque sem esse parametro o SDK cria uma instancia sozinho. Cobranca por armazenamento.)
 # ---------------------------------------------------------------------------
 info "3/5 Instancias de TensorBoard"
 
@@ -193,7 +197,7 @@ TENSORBOARDS="$(gcloud ai tensorboards list \
   --format="value(name)" 2>/dev/null || true)"
 
 if [[ -z "${TENSORBOARDS}" ]]; then
-  skip "Nenhuma instancia de TensorBoard em ${REGION} (esperado: a aula nao cria)."
+  skip "Nenhuma instancia de TensorBoard em ${REGION} (esperado com experiment_tensorboard=False)."
 elif [[ "${DELETE_TENSORBOARD}" != "true" ]]; then
   warn "Instancias de TensorBoard encontradas (cobram por armazenamento):"
   printf '%s\n' "${TENSORBOARDS}" | sed 's/^/        /'
@@ -272,7 +276,8 @@ fi
 cat <<EOF
 
   Vertex AI Experiments: nao tem comando gcloud e NAO gera custo
-  (metricas-resumo, sem TensorBoard). Se quiser limpar o historico:
+  (metricas-resumo, sem TensorBoard - init com experiment_tensorboard=False).
+  Se quiser limpar o historico:
     console > Vertex AI > Experiments > preco-imoveis-rf > Delete.
 EOF
 

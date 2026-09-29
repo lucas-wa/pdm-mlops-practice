@@ -32,6 +32,11 @@ modelo registrado num **Endpoint** do Vertex AI e fazer a primeira predição on
 > predição caso o deploy do grupo não conclua a tempo. Ele serve só para a demonstração — não conta como
 > entrega do grupo, que deve mostrar o próprio endpoint funcionando (ou, no fallback sem deploy, o modelo
 > registrado no Registry).
+>
+> **Erro transitório no deploy**: às vezes o `deploy-model` termina com `ERROR: ... System error. Please
+> try this operation again.` (falha de infraestrutura do lado do Google, não do seu modelo). O endpoint
+> continua criado e **vazio não cobra**. Basta **repetir o deploy** no mesmo endpoint — costuma funcionar
+> na segunda tentativa. Só investigue logs do container se falhar de forma consistente.
 
 ---
 

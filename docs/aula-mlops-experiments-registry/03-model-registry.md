@@ -135,8 +135,23 @@ acompanha a versão marcada com `is_default_version=True`.
 **Listar o catálogo:**
 
 ```python
+# UMA linha por modelo, sempre na versão DEFAULT — este é o catálogo, não o histórico.
 for m in aiplatform.Model.list(filter='display_name="rf-preco-imoveis"'):
     print(m.version_id, m.resource_name, m.version_aliases)
+```
+
+> **`Model.list()` não mostra as versões.** Ele lista o **catálogo**: uma entrada por modelo, na versão
+> marcada como *default*. Depois de registrar a v1 e a v2, este loop imprime **uma única linha** (a v2) —
+> e não o histórico. Para ver **todas** as versões:
+
+```python
+# TODAS as versões de um modelo (v1, v2, ...)
+for v in aiplatform.Model("1234567890").list_versions():
+    print(v.version_id, v.version_aliases, v.version_description)
+```
+
+```bash
+gcloud ai models list-version 1234567890 --region=us-central1
 ```
 
 ### 7.3. gcloud
