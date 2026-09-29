@@ -1,0 +1,14 @@
+# Copie este arquivo para terraform.tfvars e troque os valores.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# terraform.tfvars NAO deve ser commitado (contem o ID do seu projeto).
+
+project_id = "SEU_PROJECT_ID"
+
+# Regiao da aula. Precisa ser a mesma do dataset BigQuery `aula_pdm`.
+region = "us-central1"
+
+# Zona. Usada apenas por recursos zonais (ex.: Vertex AI Workbench),
+# que nao fazem parte desta aula.
+zone = "us-central1-a"
