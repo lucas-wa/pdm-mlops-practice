@@ -124,7 +124,7 @@ print(modelo_v2.version_aliases)    # ['campeao', 'default']
 
 ```python
 # TODAS as versões de um modelo (v1, v2, ...)
-for v in aiplatform.Model("1234567890").list_versions():
+for v in aiplatform.Model("1234567890").versioning_registry.list_versions():
     print(v.version_id, v.version_aliases, v.version_description)
 ```
 
