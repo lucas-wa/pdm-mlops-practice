@@ -81,6 +81,7 @@ gcloud services enable \
   storage.googleapis.com \
   bigquery.googleapis.com \
   compute.googleapis.com \
+  dataform.googleapis.com \
   --project=SEU_PROJECT_ID
 
 # só se a turma usar Vertex AI Workbench
@@ -161,7 +162,7 @@ PROJECT_ID="SEU_PROJECT_ID"
 BUCKET="${PROJECT_ID}-mlops-aula"
 
 gcloud services list --enabled --project="${PROJECT_ID}" \
-  --filter="config.name:(aiplatform.googleapis.com OR storage.googleapis.com OR bigquery.googleapis.com OR compute.googleapis.com)" \
+  --filter="config.name:(aiplatform.googleapis.com OR storage.googleapis.com OR bigquery.googleapis.com OR compute.googleapis.com OR dataform.googleapis.com)" \
   --format="value(config.name)"
 
 gcloud storage buckets describe "gs://${BUCKET}" --format="value(name, location)"
@@ -170,6 +171,9 @@ bq --project_id="${PROJECT_ID}" show --dataset "${PROJECT_ID}:aula_pdm"
 # lista vazia é resultado válido
 gcloud ai models list --region=us-central1 --project="${PROJECT_ID}"
 ```
+
+O notebook roda no **BigQuery Studio** (importar o `.ipynb` + conectar o runtime, por console):
+**Passo 6** de [`../01-setup-gcp.md`](../01-setup-gcp.md) — por isso `dataform.googleapis.com` na lista de APIs.
 
 ---
 

@@ -35,7 +35,7 @@ MLOps liga as três: **rastrear**, **versionar** e **publicar**, de forma que ou
 | Acessos | Cada aluno é **`Owner` do próprio projeto** — `roles/owner` já cobre tudo e **não é preciso conceder nenhum papel**. Os papéis mínimos em [`01-setup-gcp.md`](01-setup-gcp.md) são referência para projeto compartilhado. |
 | Região | Todos os recursos em **`us-central1`**, para casar com o dataset do BigQuery. |
 | Camada gold | Tabela gold no dataset `aula_pdm`, com nome e schema **confirmados antes da aula**. |
-| Ambiente | **BigQuery Studio** (runtime Colab Enterprise) — nada a instalar na máquina local. |
+| Ambiente | **BigQuery Studio** (runtime Colab Enterprise) — nada a instalar na máquina local. Importar o notebook e conectar o runtime: Passo 6 de [`01-setup-gcp.md`](01-setup-gcp.md). |
 | Conhecimento | Python básico, pandas e noções de treino/validação/teste. |
 
 Contrato de dados e detalhamento em [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md). Leia antes da aula.
@@ -102,7 +102,7 @@ aula-mlops-experiments-registry/
 | Arquivo | Conteúdo |
 |---|---|
 | [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md) | Pré-requisitos, contrato de dados, anti-vazamento, dedup, baseline e schema da gold |
-| [`01-setup-gcp.md`](01-setup-gcp.md) | APIs, IAM, bucket e dataset pelo console |
+| [`01-setup-gcp.md`](01-setup-gcp.md) | APIs, IAM, bucket e dataset pelo console; abrir o notebook no BigQuery Studio |
 | [`02-treino-e-experiments.md`](02-treino-e-experiments.md) | Leitura da gold, treino do RandomForest, baseline, MAE e runs no Experiments |
 | [`03-model-registry.md`](03-model-registry.md) | Salvar `model.joblib` no GCS, registrar `rf-preco-imoveis`, versões e aliases |
 | [`04-deploy-endpoint.md`](04-deploy-endpoint.md) | Criar `rf-preco-imoveis-endpoint`, implantar o modelo e predizer online |

@@ -35,8 +35,9 @@ pré-requisitos.
 
 ## O que ele provisiona
 
-**APIs** (`google_project_service`) — `aiplatform`, `storage`, `bigquery`, `compute`. Para Workbench,
-descomente `notebooks.googleapis.com` em `local.apis`.
+**APIs** (`google_project_service`) — `aiplatform`, `storage`, `bigquery`, `compute`, `dataform` (esta
+última para os notebooks do BigQuery Studio). Para Workbench, descomente `notebooks.googleapis.com` em
+`local.apis`.
 
 ```hcl
 resource "google_project_service" "aula" {

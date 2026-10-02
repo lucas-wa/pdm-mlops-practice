@@ -44,9 +44,10 @@ Prepara o projeto para **Vertex AI Experiments + Model Registry + Endpoint**.
 | `storage.googleapis.com` | Guardar o `model.joblib` |
 | `bigquery.googleapis.com` | Ler a camada gold |
 | `compute.googleapis.com` | Máquinas do deploy |
+| `dataform.googleapis.com` | Notebooks do BigQuery Studio |
 | `notebooks.googleapis.com` | **Só se** usar Vertex AI Workbench |
 
-Em **APIs & Services > Library**, busque e habilite cada uma. Confira em **Enabled APIs & services**.
+Em **APIs & Services > Library**, busque e habilite cada uma — incluindo a **Dataform API**, exigida pelos notebooks do BigQuery Studio. Confira em **Enabled APIs & services**.
 
 ---
 
@@ -103,10 +104,33 @@ O script [`gcloud/seed_gold.sh`](gcloud/seed_gold.sh) valida a gold e, só se fa
 
 ## Passo 5 — Verificação final
 
-- [ ] **Enabled APIs**: `aiplatform`, `storage`, `bigquery`, `compute`.
+- [ ] **Enabled APIs**: `aiplatform`, `storage`, `bigquery`, `compute`, `dataform`.
 - [ ] **Cloud Storage**: bucket `SEU_PROJECT_ID-mlops-aula` em `us-central1`.
 - [ ] **BigQuery**: dataset `aula_pdm` em `us-central1`, com a tabela gold.
 - [ ] **Vertex AI > Model Registry** abre em `us-central1` (lista vazia é válido).
+- [ ] **BigQuery Studio**: notebook importado e runtime conecta (Passo 6).
+
+---
+
+## Passo 6 — Abrir e rodar o notebook (BigQuery Studio)
+
+O notebook da aula roda no **BigQuery Studio**, em `us-central1`.
+
+**Importar o notebook:**
+
+1. Console → **BigQuery** → painel **Explorer**.
+2. Ao lado de **Notebooks**, clique em **View actions > Upload to Notebooks**.
+3. **Browse** → selecione [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) do repositório.
+4. Ajuste o **Notebook name**, selecione **Region** `us-central1` → **Upload**.
+
+> Para criar um notebook em branco: na barra de abas do editor, dropdown ao lado de **SQL query** → **Notebook > Empty notebook**.
+
+**Conectar o runtime:** clique em **Connect** — usa o runtime padrão e pode levar alguns minutos. Para escolher outro: dropdown ao lado de **Connect** → **Connect to a runtime** → runtime existente ou **Create new runtime**.
+
+**Executar:** rode as células uma a uma (código e SQL), na ordem. Explicação em [`02-treino-e-experiments.md`](02-treino-e-experiments.md).
+
+- **IAM**: `roles/owner` (cada aluno é Owner) já cobre tudo. Em projeto compartilhado, os papéis são `roles/bigquery.studioUser`, `roles/bigquery.jobUser`, `roles/bigquery.readSessionUser`, `roles/aiplatform.notebookRuntimeUser` e `roles/dataform.codeEditor`.
+- **Créditos**: o runtime consome **enquanto estiver ativo** (auto-shutdown por inatividade ~180 min). Desligue ao terminar — Passo 2 do checklist em [`05-encerramento-custos.md`](05-encerramento-custos.md).
 
 ---
 

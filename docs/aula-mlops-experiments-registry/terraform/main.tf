@@ -31,6 +31,7 @@ locals {
     "storage.googleapis.com",    # artefato model.joblib
     "bigquery.googleapis.com",   # leitura da camada gold
     "compute.googleapis.com",    # maquinas do deploy no endpoint / runtime do notebook
+    "dataform.googleapis.com",   # notebooks do BigQuery Studio
 
     # Descomente APENAS se a turma usar Vertex AI Workbench.
     # No BigQuery Studio esta API nao e' necessaria.

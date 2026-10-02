@@ -4,6 +4,9 @@ Acompanha as **seções 1 a 5** do notebook
 [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) — o notebook
 é o que roda na aula; aqui ficam a explicação e o caminho pelo console.
 
+**Onde rodar:** importe e execute o notebook no **BigQuery Studio** — ver Passo 6 de
+[`01-setup-gcp.md`](01-setup-gcp.md).
+
 | Item | Valor |
 | --- | --- |
 | Região | `us-central1` |
