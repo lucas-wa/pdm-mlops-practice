@@ -12,15 +12,16 @@ modelo registrado num **Endpoint** do Vertex AI e fazer a primeira predição on
 | Máquina | `n1-standard-2`, 1 réplica |
 | Container | `us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-6:latest` |
 
-> ## 💸 ATENÇÃO — este é o passo que custa dinheiro
+> ## 💸 ATENÇÃO — este é o passo que mais consome créditos
 >
-> Um modelo deployado cobra **por node-hora, 24 horas por dia, mesmo sem nenhuma requisição**. Com
+> A turma usa **créditos educacionais**, então não há cobrança em cartão. Mas um modelo deployado consome
+> créditos **por node-hora, 24 horas por dia, mesmo sem nenhuma requisição**. Com
 > `min-replica-count=1`, há uma máquina `n1-standard-2` ligada até alguém desligá-la. O endpoint **não**
 > tem auto-desligamento por inatividade.
 >
-> **Ninguém sai da aula sem rodar o checklist de
-> [`05-encerramento-custos.md`](05-encerramento-custos.md).** Undeploy e deleção do endpoint são o
-> primeiro item da lista, e por um bom motivo.
+> **Rode o checklist de [`05-encerramento-custos.md`](05-encerramento-custos.md) antes de encerrar a
+> aula.** Undeploy e deleção do endpoint são o primeiro item da lista, e por um bom motivo: é o que
+> impede o saldo de créditos de escorrer com o endpoint esquecido.
 
 > ## ⏱️ ATENÇÃO — o deploy leva de 10 a 20 minutos
 >
@@ -35,7 +36,7 @@ modelo registrado num **Endpoint** do Vertex AI e fazer a primeira predição on
 >
 > **Erro transitório no deploy**: às vezes o `deploy-model` termina com `ERROR: ... System error. Please
 > try this operation again.` (falha de infraestrutura do lado do Google, não do seu modelo). O endpoint
-> continua criado e **vazio não cobra**. Basta **repetir o deploy** no mesmo endpoint — costuma funcionar
+> continua criado e **vazio não consome créditos**. Basta **repetir o deploy** no mesmo endpoint — costuma funcionar
 > na segunda tentativa. Só investigue logs do container se falhar de forma consistente.
 
 ---
@@ -241,7 +242,7 @@ rastreabilidade — experimento → versão registrada → versão servida — �
 
 ## ⚠️ Antes de fechar o notebook
 
-O endpoint que você acabou de criar continua cobrando. Vá agora para
+O endpoint que você acabou de criar continua consumindo créditos. Vá agora para
 **[`05-encerramento-custos.md`](05-encerramento-custos.md)** e rode o checklist na ordem:
 
 1. `gcloud ai endpoints undeploy-model ENDPOINT_ID --region=us-central1 --deployed-model-id=DEPLOYED_MODEL_ID`

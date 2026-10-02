@@ -2,7 +2,7 @@
 
 Este documento é a preparação **anterior à aula**. Ele cobre duas coisas: o **checklist de ambiente** (o que precisa estar pronto no GCP) e o **contrato de dados** (o que exatamente será lido da gold, o que é alvo, o que é feature e o que precisa ser excluído).
 
-> **Antes de qualquer coisa:** leia o [`README.md`](README.md) e o aviso de custos. O encerramento em [`05-encerramento-custos.md`](05-encerramento-custos.md) é parte obrigatória da atividade.
+> **Antes de qualquer coisa:** leia o [`README.md`](README.md) e o aviso de consumo de créditos. O encerramento em [`05-encerramento-custos.md`](05-encerramento-custos.md) é parte obrigatória da atividade.
 
 ---
 
@@ -11,13 +11,15 @@ Este documento é a preparação **anterior à aula**. Ele cobre duas coisas: o 
 ### 1.1 Conta e projeto
 
 - [ ] Projeto GCP próprio, com **ID anotado** (usado como `SEU_PROJECT_ID` em todos os comandos).
-- [ ] **Faturamento (billing) ativo** no projeto. Sem billing, a API do Vertex AI não habilita.
+- [ ] **Faturamento (billing) ativo** no projeto, vinculado aos **créditos educacionais** da disciplina. Sem billing, a API do Vertex AI não habilita.
 - [ ] Conta de faturamento identificada (`SEU_BILLING_ACCOUNT_ID`) — necessária para configurar o budget no encerramento.
-- [ ] **Budget com alerta configurado** antes de criar qualquer recurso. Ver [`05-encerramento-custos.md`](05-encerramento-custos.md), seção de Budgets.
+- [ ] **Budget com alerta configurado** antes de criar qualquer recurso, para acompanhar o consumo dos créditos. Ver [`05-encerramento-custos.md`](05-encerramento-custos.md), seção de Budgets.
 
 ### 1.2 Permissões
 
-Se o aluno é **`Owner` do próprio projeto**, os itens abaixo já estão cobertos. Em projeto compartilhado, confirme os papéis mínimos:
+- [ ] Você é **`Owner`** do seu próprio projeto (`roles/owner`), então **já tem todas as permissões necessárias — não precisa conceder nada**.
+
+A tabela abaixo é **apenas referência para o cenário de projeto compartilhado** (ou de uma conta de serviço dedicada), onde não existe `roles/owner` e os papéis mínimos precisam ser concedidos um a um:
 
 | Papel | Para quê |
 |---|---|
@@ -26,7 +28,7 @@ Se o aluno é **`Owner` do próprio projeto**, os itens abaixo já estão cobert
 | `roles/bigquery.dataViewer` | Ler a tabela gold |
 | `roles/bigquery.jobUser` | Executar as consultas |
 
-Os comandos de concessão estão em [`01-setup-gcp.md`](01-setup-gcp.md) e em [`scripts/00_setup.sh`](scripts/00_setup.sh).
+Os comandos de concessão desse cenário estão em [`01-setup-gcp.md`](01-setup-gcp.md) e em [`scripts/00_setup.sh`](scripts/00_setup.sh).
 
 ### 1.3 APIs habilitadas
 
@@ -50,7 +52,7 @@ Passo a passo em [`01-setup-gcp.md`](01-setup-gcp.md).
 - [ ] Acesso ao **BigQuery Studio** no console (o runtime por baixo é o Colab Enterprise).
 - [ ] Notebook [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) aberto e com a primeira célula de instalação executada.
 
-> **O runtime custa enquanto estiver ativo.** Há desligamento automático por inatividade (aproximadamente 180 minutos), mas apagar o runtime ao final é o que garante o encerramento. Ver [`05-encerramento-custos.md`](05-encerramento-custos.md).
+> **O runtime consome créditos enquanto estiver ativo.** Há desligamento automático por inatividade (aproximadamente 180 minutos), mas apagar o runtime ao final é o que garante o encerramento. Ver [`05-encerramento-custos.md`](05-encerramento-custos.md).
 
 ### 1.6 A confirmar ao vivo, antes da aula
 

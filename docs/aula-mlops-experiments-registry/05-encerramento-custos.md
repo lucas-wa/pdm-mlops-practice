@@ -1,33 +1,35 @@
 # 05 — Encerramento e custos
 
-Este é o documento mais importante da aula. Ele encerra os recursos criados, na ordem correta, e configura as proteções que evitam surpresas na fatura.
+Este é o documento mais importante da aula. Ele encerra os recursos criados, na ordem correta, e configura o acompanhamento do consumo dos créditos.
+
+> **A turma usa créditos educacionais do Google Cloud — não há cobrança no cartão de ninguém.** Os créditos, porém, são **finitos**: tudo o que fica ligado consome saldo que faria falta nas próximas atividades. Encerrar os recursos é **higiene de ambiente**, e faz parte da entrega.
 
 > **Execute este checklist ao final da aula, com a turma, item a item.**
 >
-> O recurso mais caro desta aula — o **Endpoint com modelo implantado** — cobra **por node-hora, 24 horas por dia, mesmo sem nenhuma requisição**. Ele não desliga sozinho. Se ficar esquecido, continua cobrando indefinidamente.
+> O recurso que mais consome créditos nesta aula — o **Endpoint com modelo implantado** — consome **por node-hora, 24 horas por dia, mesmo sem nenhuma requisição**. Ele não desliga sozinho. Se ficar esquecido, segue queimando créditos indefinidamente.
 
 Tudo o que está aqui também está automatizado, na mesma ordem e de forma idempotente, em [`scripts/30_teardown.sh`](scripts/30_teardown.sh).
 
 ---
 
-## 1. Ordem de custo (do mais caro ao mais barato)
+## 1. Ordem de consumo (do que mais consome créditos ao que menos consome)
 
-Encerre **nesta ordem**. Ela não é arbitrária: além de resolver primeiro o que mais custa, respeita as dependências entre os recursos.
+Encerre **nesta ordem**. Ela não é arbitrária: além de resolver primeiro o que mais consome, respeita as dependências entre os recursos.
 
-| # | Recurso | Por que custa | Urgência |
+| # | Recurso | Por que consome créditos | Urgência |
 |---|---|---|---|
-| 1 | **Endpoint com modelo implantado** | Nós cobrados **por hora, 24/7**, mesmo ociosos. Não desliga sozinho | **Crítica** |
-| 2 | **Runtime do notebook** (BigQuery Studio / Colab Enterprise; ou VM do Workbench) | Cobra enquanto está ativo | Alta |
-| 3 | **Instância de TensorBoard** | Cobrança por armazenamento, na ordem de **US$ 10/GiB/mês**. Nesta aula **não criamos nenhuma porque passamos `experiment_tensorboard=False`** no `aiplatform.init(...)` — sem esse parâmetro o SDK criaria uma sozinha | Média (se existir) |
-| 4 | **Modelo, versões e objetos no GCS** | Custo baixo, de armazenamento | Baixa |
+| 1 | **Endpoint com modelo implantado** | Nós tarifados **por hora, 24/7**, mesmo ociosos. Não desliga sozinho | **Crítica** |
+| 2 | **Runtime do notebook** (BigQuery Studio / Colab Enterprise; ou VM do Workbench) | Consome enquanto está ativo | Alta |
+| 3 | **Instância de TensorBoard** | Consumo por armazenamento, na ordem de **US$ 10/GiB/mês**. Nesta aula **não criamos nenhuma porque passamos `experiment_tensorboard=False`** no `aiplatform.init(...)` — sem esse parâmetro o SDK criaria uma sozinha | Média (se existir) |
+| 4 | **Modelo, versões e objetos no GCS** | Consumo baixo, de armazenamento | Baixa |
 
 > **Dependência que quebra o teardown:** não é possível deletar um modelo que ainda está **implantado** em um endpoint. É preciso fazer o **undeploy** primeiro. Por isso o passo 1 vem antes do passo 4 — e por isso tentar apagar o modelo primeiro gera um erro que costuma travar a turma.
 
-> **Registrar modelo no Model Registry é GRATUITO.** Não há cobrança pelo registro nem pelo versionamento. O que se paga é o armazenamento do artefato no GCS (centavos) e, principalmente, o **endpoint** onde a versão é implantada.
+> **Registrar modelo no Model Registry é GRATUITO.** Não há tarifa pelo registro nem pelo versionamento. O que consome crédito é o armazenamento do artefato no GCS (centavos) e, principalmente, o **endpoint** onde a versão é implantada.
 
 ---
 
-## 2. Passo 1 — Undeploy e deleção do endpoint (o mais caro)
+## 2. Passo 1 — Undeploy e deleção do endpoint (o que mais consome)
 
 ### 2.1 Undeploy do modelo
 
@@ -37,7 +39,7 @@ Encerre **nesta ordem**. Ela não é arbitrária: além de resolver primeiro o q
 2. Confirmar a região **`us-central1`** no seletor.
 3. Clicar em **`rf-preco-imoveis-endpoint`**.
 4. Na lista de modelos implantados, no menu de três pontos da linha do modelo, escolher **Undeploy model** (*Remover implantação do modelo*).
-5. Confirmar e **aguardar a conclusão**. Enquanto o undeploy não terminar, os nós continuam cobrando.
+5. Confirmar e **aguardar a conclusão**. Enquanto o undeploy não terminar, os nós continuam consumindo créditos.
 
 **gcloud:**
 
@@ -124,12 +126,12 @@ gcloud colab runtimes delete RUNTIME_ID \
 
 ### 3.2 Vertex AI Workbench (só se alguém usou)
 
-Workbench é uma **VM**: ela cobra enquanto estiver ligada, mesmo sem notebook aberto.
+Workbench é uma **VM**: ela consome créditos enquanto estiver ligada, mesmo sem notebook aberto.
 
 **Console:**
 
 1. Console → **Vertex AI** → **Workbench** → **Instances**.
-2. **Stop** (*Parar*) a instância — interrompe a cobrança de computação.
+2. **Stop** (*Parar*) a instância — interrompe o consumo de computação.
 3. **Delete** (*Excluir*) a instância — encerra também o disco.
 
 **gcloud:**
@@ -158,7 +160,7 @@ gcloud workbench instances delete INSTANCE_NAME \
 
 > **Nesta aula NÃO criamos nenhuma instância de TensorBoard — porque passamos `experiment_tensorboard=False` no `aiplatform.init(...)`.** As métricas-resumo do Vertex AI Experiments (`mae`, `mae_baseline`) **não exigem TensorBoard**, e com esse parâmetro o rastreamento sai praticamente sem custo.
 
-**Sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* automaticamente** ao associar o experimento no `init` — não é preciso pedir nada, nem usar `log_time_series_metrics`. Por isso este passo é uma **verificação**, e não uma formalidade: se alguém rodou o `init` sem `experiment_tensorboard=False` (ou seguiu outro tutorial), a instância está lá. A cobrança é por **armazenamento**, na ordem de **US$ 10 por GiB por mês** — **confirme o valor atual no pricing do Vertex AI ao vivo**, porque preços mudam.
+**Sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* automaticamente** ao associar o experimento no `init` — não é preciso pedir nada, nem usar `log_time_series_metrics`. Por isso este passo é uma **verificação**, e não uma formalidade: se alguém rodou o `init` sem `experiment_tensorboard=False` (ou seguiu outro tutorial), a instância está lá. O consumo é por **armazenamento**, na ordem de **US$ 10 por GiB por mês** — **confirme o valor atual no pricing do Vertex AI ao vivo**, porque preços mudam.
 
 **Console:**
 
@@ -186,7 +188,7 @@ gcloud ai tensorboards delete TENSORBOARD_ID \
 
 ## 5. Passo 4 — Modelo, versões e objetos no GCS
 
-Custo baixo, mas o passo mantém o projeto limpo e fecha o ciclo da aula.
+Consumo baixo, mas o passo mantém o projeto limpo e fecha o ciclo da aula.
 
 ### 5.1 Versões e modelo no Model Registry
 
@@ -281,9 +283,9 @@ bash scripts/30_teardown.sh
 
 ---
 
-## 7. Budgets e alertas de faturamento
+## 7. Budgets e alertas — acompanhar o consumo dos créditos
 
-Um budget **não bloqueia gastos** — ele **avisa**. Ainda assim, é a diferença entre descobrir um endpoint esquecido em dois dias ou em dois meses.
+Como a turma usa **créditos educacionais**, o budget aqui não serve para evitar cobrança: ele serve para **acompanhar quanto dos créditos já foi consumido** e avisar quando algo está consumindo mais do que o esperado. Um budget **não bloqueia nada** — ele **avisa**. Ainda assim, é a diferença entre descobrir um endpoint esquecido em dois dias ou em dois meses.
 
 ### 7.1 Console
 
@@ -291,7 +293,7 @@ Um budget **não bloqueia gastos** — ele **avisa**. Ainda assim, é a diferen�
 2. Menu lateral → **Budgets & alerts** (*Orçamentos e alertas*).
 3. **Create budget** (*Criar orçamento*).
 4. **Scope** (*Escopo*): restringir ao projeto `SEU_PROJECT_ID`.
-5. **Amount** (*Valor*): um valor baixo e realista para a atividade — por exemplo **US$ 50**.
+5. **Amount** (*Valor*): um valor baixo e realista para a atividade — por exemplo **US$ 50** de consumo de créditos.
 6. **Actions / Thresholds** (*Regras de limite*): marcar alertas em **50%**, **90%** e **100%**.
 7. Confirmar os destinatários dos e-mails de alerta e salvar.
 
@@ -326,18 +328,18 @@ Listar e conferir:
 gcloud billing budgets list --billing-account=SEU_BILLING_ACCOUNT_ID
 ```
 
-> **O alerta avisa, não corta.** Nenhum threshold interrompe recursos automaticamente. O budget é um detector de fumaça, não um extintor — o extintor é este checklist.
+> **O alerta avisa, não corta.** Nenhum threshold interrompe recursos automaticamente, e o consumo de créditos segue igual. O budget é um detector de fumaça, não um extintor — o extintor é este checklist.
 
 ---
 
-## 8. Free Trial como rede de segurança
+## 8. Créditos educacionais — o que eles cobrem e o que não cobrem
 
-Quem está no **Free Trial** do Google Cloud tem **US$ 300 em créditos, válidos por 90 dias**. Dois pontos importantes para a turma:
+Os alunos desta disciplina usam **créditos educacionais do Google Cloud** (Google Cloud for Education / cupom da disciplina). Dois pontos importantes para a turma:
 
-- **Ao fim do período de teste, não há cobrança automática.** Os recursos são suspensos e é preciso fazer o upgrade para uma conta paga de forma explícita. Isso é uma proteção real contra a fatura surpresa.
-- **Os créditos são consumidos igualmente.** Um endpoint esquecido queima crédito todo dia, e crédito queimado não volta. A rede de segurança evita a cobrança, não o desperdício.
+- **Não há cobrança no cartão de ninguém.** O consumo sai do saldo de créditos do projeto, não de um meio de pagamento pessoal. Não existe "fatura surpresa" nesta atividade.
+- **Os créditos são finitos e não voltam.** Um endpoint esquecido queima crédito todo dia, e crédito queimado não volta para o saldo. Por isso o teardown continua valendo: é **higiene de ambiente**, para que o saldo fique disponível para as próximas atividades.
 
-Onde conferir: Console → **Billing** → **Overview**, no painel de créditos do Free Trial (dias restantes e saldo).
+Onde conferir: Console → **Billing** → **Overview**, no painel de créditos (saldo restante e validade).
 
 ---
 
@@ -378,10 +380,10 @@ As três primeiras devem voltar vazias para os recursos da aula.
 
 ## 10. Retomando os conceitos
 
-| Recurso | Cobra quando | Encerra como |
+| Recurso | Consome créditos quando | Encerra como |
 |---|---|---|
-| Vertex AI **Experiments** (métricas-resumo) | Praticamente não cobra — desde que o `init` use `experiment_tensorboard=False` e nenhum TensorBoard seja criado | Pode ficar |
-| **Model Registry** | Registrar é **grátis**; paga-se o artefato no GCS | Deletar versões e modelo |
+| Vertex AI **Experiments** (métricas-resumo) | Praticamente não consome — desde que o `init` use `experiment_tensorboard=False` e nenhum TensorBoard seja criado | Pode ficar |
+| **Model Registry** | Registrar é **grátis**; consome-se apenas o artefato no GCS | Deletar versões e modelo |
 | **Endpoint** com modelo implantado | **Por node-hora, 24/7, mesmo ocioso** | **Undeploy → delete** |
 | **Runtime** do notebook | Enquanto ativo (auto-shutdown ~180 min) | Deletar o runtime |
 | **TensorBoard** | Por GiB armazenado/mês | Deletar a instância |

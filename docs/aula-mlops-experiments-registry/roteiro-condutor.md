@@ -15,7 +15,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 - [ ] Rótulos do console conferidos no dia (rebrand "Gemini Enterprise Agent Platform" na documentação vs. "Vertex AI" no console).
 - [ ] Runtime do BigQuery Studio **já ligado e aquecido** — subir runtime ao vivo custa minutos que o roteiro não tem.
 - [ ] Abas do navegador pré-abertas: BigQuery Studio · Vertex AI Experiments · Model Registry · Online prediction → Endpoints · Billing → Budgets & alerts.
-- [ ] Budget do projeto já criado, para mostrar na tela sem precisar configurar do zero.
+- [ ] Budget do projeto já criado (acompanhamento do consumo de créditos), para mostrar na tela sem precisar configurar do zero.
 
 > **Regra de ouro do tempo.** O deploy do endpoint leva de 10 a 20 minutos e **não acelera**. O roteiro abaixo dispara o deploy assim que o modelo está registrado e usa o tempo de provisionamento para explicar Registry e Experiments. Se você esperar o deploy terminar parado, a aula não fecha em 1 hora.
 
@@ -31,7 +31,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 | Enunciar a pergunta | Prever `preco` (preço **de anúncio**) a partir das características do imóvel |
 | Desenhar o caminho | gold → treino → **Experiments** (rastrear) → **Model Registry** (versionar) → **Endpoint** (servir) |
 | Definir MLOps em uma frase | "Fazer com que outra pessoa consiga reproduzir, auditar e reverter o que você treinou." |
-| Avisar sobre custos | Apontar para [`05-encerramento-custos.md`](05-encerramento-custos.md) **agora**, não no final. "Vamos criar um endpoint que cobra por hora. Nos últimos 10 minutos, desligamos tudo juntos." |
+| Avisar sobre consumo de créditos | Apontar para [`05-encerramento-custos.md`](05-encerramento-custos.md) **agora**, não no final. "Vocês estão usando créditos educacionais — ninguém vai receber cobrança no cartão. Mas o endpoint consome crédito por hora, então nos últimos 10 minutos desligamos tudo juntos." |
 
 > **Checkpoint — o que os alunos devem ter na tela**
 >
@@ -113,7 +113,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 
 ---
 
-## 45–55 min · Encerramento e custos, ao vivo
+## 45–55 min · Encerramento e consumo de créditos, ao vivo
 
 **Objetivo do bloco:** nenhum aluno sai da sala com recurso ligado.
 
@@ -123,16 +123,16 @@ Conduzir **junto com a turma**, item a item, seguindo [`05-encerramento-custos.m
 |---|---|
 | 45–47 | **Undeploy** do modelo no endpoint, depois **deletar o endpoint**. Explicar por que esta é a ordem: não se apaga o modelo com ele implantado |
 | 47–49 | **Apagar o runtime** do notebook (BigQuery Studio / Colab Enterprise). Se alguém usou Workbench, **Stop** e **Delete** da instância |
-| 49–50 | **TensorBoard**: nesta aula **não criamos nenhuma instância porque o `aiplatform.init(...)` passa `experiment_tensorboard=False`**. Deixar claro que, **sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* sozinho** ao associar o experimento — por isso conferimos a lista mesmo assim. Há cobrança por armazenamento (na ordem de US$ 10/GiB/mês — confirmar o valor no pricing ao vivo) |
+| 49–50 | **TensorBoard**: nesta aula **não criamos nenhuma instância porque o `aiplatform.init(...)` passa `experiment_tensorboard=False`**. Deixar claro que, **sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* sozinho** ao associar o experimento — por isso conferimos a lista mesmo assim. Há consumo de créditos por armazenamento (na ordem de US$ 10/GiB/mês — confirmar o valor no pricing ao vivo) |
 | 50–52 | Deletar **versões e modelo** e os **objetos no GCS da aula** (`gs://${PROJECT_ID}-mlops-aula/`) |
-| 52–54 | **Budget e alertas**: mostrar Billing → **Budgets & alerts** na tela; explicar que o alerta avisa, não bloqueia |
+| 52–54 | **Budget e alertas**: mostrar Billing → **Budgets & alerts** na tela; explicar que serve para acompanhar o consumo dos créditos e que o alerta avisa, não bloqueia |
 | 54–55 | **Varredura final**: percorrer a caixa "Confira que nada ficou ligado" do [`05-encerramento-custos.md`](05-encerramento-custos.md) |
 
 > **Reforço obrigatório em voz alta**
 >
 > **NÃO apagar** o bucket compartilhado `${PROJECT_ID}-aula-pdm` nem o dataset `aula_pdm`. São infraestrutura das aulas anteriores e serão usados no Dia 2. Apagar é irreversível.
 
-> **Free Trial como rede de segurança.** Quem está no Free Trial (US$ 300 / 90 dias) **não é cobrado automaticamente** quando o período expira. É uma proteção real, mas não substitui o teardown: os créditos são consumidos do mesmo jeito.
+> **Créditos educacionais — diga isso em voz alta.** A turma usa créditos educacionais do Google Cloud: **ninguém será cobrado no cartão**. Mas os créditos são **finitos e não voltam** — um endpoint esquecido queima saldo todo dia. O teardown é higiene de ambiente, para o saldo chegar inteiro nas próximas atividades.
 
 > **Checkpoint — o que os alunos devem ter na tela**
 >
@@ -163,7 +163,7 @@ Este roteiro cabe em **60 minutos** quando o ensaio foi feito e o deploy é ante
 | ***Fallback* rápido — sem deploy** | ~40 min | Percorrer treino → Experiments → Registry. Demonstrar a predição no **endpoint de referência** em 3 minutos e ir para o encerramento |
 | **Turma travada no ambiente** | variável | Usar o projeto do docente como referência única na tela; alunos acompanham sem executar, e a prática vira tarefa assistida |
 
-**O que nunca cortar:** o bloco **45–55 (encerramento e custos)**. É o único bloco cuja ausência gera consequência financeira para os alunos. Se o tempo apertar, corte a segunda versão do modelo, corte a segunda run, corte a predição ao vivo — o teardown fica.
+**O que nunca cortar:** o bloco **45–55 (encerramento e consumo de créditos)**. É o único bloco cuja ausência deixa recursos ligados queimando os créditos da disciplina. Se o tempo apertar, corte a segunda versão do modelo, corte a segunda run, corte a predição ao vivo — o teardown fica.
 
 **O que cortar primeiro, nesta ordem:**
 

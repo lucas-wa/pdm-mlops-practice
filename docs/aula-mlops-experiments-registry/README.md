@@ -2,11 +2,13 @@
 
 Tutorial de aproximadamente 1 hora, conduzido ao vivo pelo console do Google Cloud, que parte da camada **gold** de anúncios de imóveis (BigQuery, dataset `aula_pdm`, região `us-central1`) e chega a um modelo treinado, rastreado, versionado e servido em um endpoint de predição online.
 
-> **AVISO DE CUSTOS — LEIA ANTES DE COMEÇAR**
+> **AVISO DE CONSUMO DE CRÉDITOS — LEIA ANTES DE COMEÇAR**
 >
-> Esta aula cria recursos que **cobram por hora enquanto existirem**, mesmo sem nenhum tráfego. O principal deles é o **Endpoint com modelo implantado** (`rf-preco-imoveis-endpoint`): os nós ficam ligados 24/7 até você fazer o *undeploy* e apagar o endpoint.
+> A turma usa **créditos educacionais do Google Cloud**: **não há cobrança no cartão de ninguém**. Os créditos, porém, são **finitos**.
 >
-> **Ao terminar a aula, execute o checklist de encerramento:** [`05-encerramento-custos.md`](05-encerramento-custos.md).
+> Esta aula cria recursos que **consomem créditos por hora enquanto existirem**, mesmo sem nenhum tráfego. O principal deles é o **Endpoint com modelo implantado** (`rf-preco-imoveis-endpoint`): os nós ficam ligados 24/7 até você fazer o *undeploy* e apagar o endpoint.
+>
+> **Ao terminar a aula, execute o checklist de encerramento:** [`05-encerramento-custos.md`](05-encerramento-custos.md). É higiene de ambiente — mantém o saldo de créditos disponível para as próximas atividades.
 >
 > O encerramento é feito **ao vivo, junto com a turma**, nos últimos minutos da aula. Não deixe para depois.
 
@@ -27,14 +29,14 @@ Ao final da aula, o aluno deve ser capaz de:
 3. Registrar parâmetros e métricas de **duas execuções** no experimento `preco-imoveis-rf` e compará-las no console do Vertex AI Experiments.
 4. Registrar o modelo como `rf-preco-imoveis` no Model Registry, criar uma **nova versão** e entender o papel do alias `default`.
 5. Implantar a versão em um **Endpoint** (`rf-preco-imoveis-endpoint`) e obter uma **predição online** com o payload na ordem canônica de features.
-6. Executar o **checklist de encerramento** e explicar qual recurso gera qual custo.
+6. Executar o **checklist de encerramento** e explicar qual recurso consome quanto crédito.
 
 ## 3. Pré-requisitos
 
 | Item | Detalhe |
 |---|---|
-| Projeto GCP | Um projeto próprio com **faturamento (billing) ativo**. Free Trial (US$ 300 / 90 dias) é suficiente. |
-| Acessos | Ser `Owner` do próprio projeto cobre tudo. Em projeto compartilhado, ver os papéis mínimos em [`01-setup-gcp.md`](01-setup-gcp.md). |
+| Projeto GCP | Um projeto próprio com **faturamento (billing) ativo**, vinculado aos **créditos educacionais** da disciplina. |
+| Acessos | Cada aluno é **`Owner` do próprio projeto** — `roles/owner` já cobre tudo (Vertex AI, Storage, BigQuery, habilitar APIs) e **não é preciso conceder nenhum papel**. Os papéis mínimos em [`01-setup-gcp.md`](01-setup-gcp.md) são referência para projeto compartilhado. |
 | Região | Todos os recursos em **`us-central1`**, para casar com o dataset do BigQuery. |
 | Camada gold | Tabela gold de anúncios já existente no dataset `aula_pdm`, com nome e schema **confirmados antes da aula**. |
 | Ambiente | **BigQuery Studio** (runtime Colab Enterprise) — não é necessário instalar nada na máquina local. |
@@ -80,7 +82,7 @@ Estes nomes são usados **exatamente assim** em todos os arquivos, notebooks e s
 | 05–20 | Treino + Experiments | Modelo treinado, MAE comparado ao baseline, 2 runs comparadas no console |
 | 20–30 | Model Registry | `model.joblib` no GCS, modelo `rf-preco-imoveis` registrado, nova versão + alias |
 | 30–45 | Deploy em Endpoint | Endpoint respondendo `/predict` (deploy **iniciado cedo**, em paralelo) |
-| 45–55 | Encerramento e custos | Teardown executado ao vivo; budget configurado |
+| 45–55 | Encerramento e consumo de créditos | Teardown executado ao vivo; budget configurado |
 | 55–60 | Fechamento | Entregas conferidas e ponte para o Dia 2 (orquestração/pipelines) |
 
 Com o deploy em endpoint, a aula pode esticar para **75–90 minutos**. O caminho **sem deploy** (treino → Experiments → Registry) é o *fallback* rápido quando o tempo apertar. Detalhes e contingências no [`roteiro-condutor.md`](roteiro-condutor.md).
@@ -96,7 +98,7 @@ Com o deploy em endpoint, a aula pode esticar para **75–90 minutos**. O caminh
 | [`02-treino-e-experiments.md`](02-treino-e-experiments.md) | Leitura da gold, treino do RandomForest, baseline, MAE e registro das runs no Experiments |
 | [`03-model-registry.md`](03-model-registry.md) | Salvar `model.joblib` no GCS, registrar `rf-preco-imoveis`, versões e aliases |
 | [`04-deploy-endpoint.md`](04-deploy-endpoint.md) | Criar `rf-preco-imoveis-endpoint`, implantar o modelo e fazer predição online |
-| [`05-encerramento-custos.md`](05-encerramento-custos.md) | **Checklist de teardown**, budgets e alertas, Free Trial |
+| [`05-encerramento-custos.md`](05-encerramento-custos.md) | **Checklist de teardown**, budgets e alertas, créditos educacionais |
 | [`roteiro-condutor.md`](roteiro-condutor.md) | Roteiro minuto a minuto para o docente conduzir no console |
 
 ### Código e automação
@@ -112,7 +114,7 @@ Com o deploy em endpoint, a aula pode esticar para **75–90 minutos**. O caminh
 
 ## 8. Ordem de leitura sugerida
 
-1. Este `README.md` (visão geral e custos).
+1. Este `README.md` (visão geral e consumo de créditos).
 2. [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md) — **antes** da aula, para confirmar a gold.
 3. [`01-setup-gcp.md`](01-setup-gcp.md) — ambiente pronto.
 4. [`02-treino-e-experiments.md`](02-treino-e-experiments.md) → [`03-model-registry.md`](03-model-registry.md) → [`04-deploy-endpoint.md`](04-deploy-endpoint.md) — o fluxo da aula.

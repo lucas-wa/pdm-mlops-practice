@@ -13,7 +13,7 @@ Este documento cobre as **seções 6 e 7** do notebook
 | Container de serving | `us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-6:latest` |
 | Features (ordem canônica) | `[area_util, area_total, quartos, banheiros, garagens]` |
 
-> **Registrar é gratuito.** O Model Registry não cobra pela entrada no catálogo. Você paga apenas o
+> **Registrar é gratuito.** O Model Registry não é tarifado pela entrada no catálogo. Você paga apenas o
 > armazenamento do artefato no GCS (alguns KB, centavos) e — só depois, em
 > [`04-deploy-endpoint.md`](04-deploy-endpoint.md) — o endpoint.
 

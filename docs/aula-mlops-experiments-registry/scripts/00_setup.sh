@@ -9,16 +9,24 @@
 #   3. cria o bucket DEDICADO da aula, se ainda nao existir;
 #   4. confere o dataset BigQuery `aula_pdm` (cria apenas se estiver faltando).
 #
+# NESTA DISCIPLINA, CADA ALUNO E' OWNER DO PROPRIO PROJETO: roles/owner ja cobre
+# tudo (Vertex AI, Storage, BigQuery, habilitar APIs), entao o passo 2 (IAM) e'
+# REDUNDANTE e pode ser pulado com GRANT_IAM=false. O passo so faz sentido em
+# projeto compartilhado ou com uma service account dedicada (menor privilegio).
+#
 # Uso:
 #   PROJECT_ID=meu-projeto bash scripts/00_setup.sh
+#
+#   # aluno Owner do proprio projeto (recomendado nesta disciplina):
+#   PROJECT_ID=meu-projeto GRANT_IAM=false bash scripts/00_setup.sh
 #
 # Variaveis de ambiente aceitas (todas opcionais, exceto PROJECT_ID):
 #   PROJECT_ID     ID do projeto. Se ausente, usa `gcloud config get-value project`.
 #   IAM_MEMBER     Principal que recebe os papeis, no formato
 #                  "user:email@dominio.com" ou "serviceAccount:sa@projeto.iam.gserviceaccount.com".
 #                  Se ausente, usa a conta ativa do gcloud.
-#   GRANT_IAM      "true" (padrao) ou "false". Se voce e' Owner do projeto,
-#                  pode usar GRANT_IAM=false: roles/owner ja cobre tudo.
+#   GRANT_IAM      "true" (padrao) ou "false". Como voce e' Owner do projeto,
+#                  use GRANT_IAM=false: roles/owner ja cobre tudo.
 #   ENABLE_NOTEBOOKS_API  "false" (padrao). Use "true" APENAS se a turma
 #                  usar Vertex AI Workbench (no BigQuery Studio nao e' preciso).
 #
@@ -185,6 +193,6 @@ cat <<EOF
   Endpoint ............ rf-preco-imoveis-endpoint (criado no passo de deploy)
 
   Proximo passo: abrir o notebook da aula no BigQuery Studio.
-  Ao terminar a aula, rode OBRIGATORIAMENTE: bash scripts/30_teardown.sh
-  (o endpoint cobra por node-hora 24/7, mesmo sem trafego).
+  Ao terminar, rode \`bash scripts/30_teardown.sh\` para nao deixar o endpoint
+  consumindo creditos por node-hora 24/7, mesmo sem trafego.
 EOF

@@ -163,7 +163,21 @@ Para incluir a API do Workbench, descomente `notebooks.googleapis.com` na lista 
 
 ## Passo 2 — Conceder IAM (menor privilégio)
 
-Papéis mínimos para executar a aula ponta a ponta:
+> ## ⚠️ Este passo é opcional — você pode pular
+>
+> **Nesta disciplina, cada aluno é `Owner` do próprio projeto GCP.** O papel `roles/owner`
+> já concede **tudo** o que a aula precisa — Vertex AI, Cloud Storage, BigQuery e habilitar
+> APIs. **Não é preciso conceder nenhum papel.**
+>
+> Leia o restante do passo como **material informativo** e siga direto para o
+> **Passo 3 — Criar o bucket dedicado da aula**.
+
+O que vem abaixo é **referência para outro cenário**: projeto **compartilhado** (vários
+alunos ou equipes no mesmo projeto) ou uma **conta de serviço dedicada** executando a aula
+com menor privilégio — que é o padrão correto fora da sala de aula. **Não é o caso do
+aluno-Owner.**
+
+Papéis mínimos para executar a aula ponta a ponta nesse cenário:
 
 | Papel | Para quê |
 |---|---|
@@ -172,16 +186,12 @@ Papéis mínimos para executar a aula ponta a ponta:
 | `roles/bigquery.dataViewer` | Ler a tabela gold. |
 | `roles/bigquery.jobUser` | Executar as consultas (um job de query custa cota de job). |
 
-> **Se você é Owner do próprio projeto**, os quatro papéis já estão cobertos por
-> `roles/owner` e este passo é **opcional**. Ele existe para o cenário de conta de serviço
-> dedicada (menor privilégio), que é o padrão correto fora da sala de aula.
-
 O *principal* que recebe os papéis pode ser:
 
 - um usuário: `user:seu-email@dominio.com`
 - uma conta de serviço: `serviceAccount:NOME@SEU_PROJECT_ID.iam.gserviceaccount.com`
 
-### Console (aula)
+### Console (aula) — referência: projeto compartilhado ou service account
 
 1. **IAM & Admin > IAM**.
 2. Botão **Grant access** (topo da tabela).
@@ -194,7 +204,7 @@ Para criar a conta de serviço antes: **IAM & Admin > Service Accounts > Create 
 account**, informe nome e ID, e pule a atribuição de papéis nessa tela (faça pelo passo acima,
 que é o caminho canônico).
 
-### gcloud
+### gcloud — referência: projeto compartilhado ou service account
 
 ```bash
 PROJECT_ID="SEU_PROJECT_ID"
@@ -224,7 +234,7 @@ gcloud projects get-iam-policy "${PROJECT_ID}" \
 `add-iam-policy-binding` é idempotente: reconceder um papel já concedido não gera erro nem
 duplica a binding.
 
-### Terraform
+### Terraform — referência: projeto compartilhado ou service account
 
 Este bloco **não** está em `terraform/main.tf`, porque a aula assume que o aluno é Owner do
 próprio projeto e porque escrever IAM de projeto via Terraform em um projeto compartilhado
@@ -455,7 +465,7 @@ Detalhamento dos pontos que mais confundem:
 - **Não existe resource para Vertex AI Experiments.** Nem em Terraform, nem em `gcloud`. O
   Experiment é criado implicitamente pelo SDK Python na primeira chamada de
   `aiplatform.init(..., experiment="preco-imoveis-rf")`. O único vizinho disponível em IaC é
-  `google_vertex_ai_tensorboard` — que **não usamos**, porque cobra armazenamento e as
+  `google_vertex_ai_tensorboard` — que **não usamos**, porque é tarifado por armazenamento e as
   métricas-resumo desta aula não precisam dele. Atenção: esse `init` **cria uma instância
   *Default Tensorboard* sozinho** se você não passar `experiment_tensorboard=False` — o notebook
   da aula passa (veja `02-treino-e-experiments.md`).
@@ -474,7 +484,7 @@ Detalhamento dos pontos que mais confundem:
 
 `terraform destroy` **não** é o caminho de encerramento desta aula, por dois motivos:
 
-1. Ele não remove o que mais custa — o **modelo implantado no endpoint**, que cobra por
+1. Ele não remove o que mais custa — o **modelo implantado no endpoint**, que consome créditos por
    node-hora 24/7 mesmo sem tráfego —, porque esses recursos não estão sob Terraform.
 2. Ele tentaria destruir o dataset `aula_pdm`, que é **infra compartilhada** (por isso o
    `prevent_destroy = true`, que faz o `destroy` falhar de propósito).

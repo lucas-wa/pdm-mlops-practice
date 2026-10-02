@@ -8,9 +8,9 @@
 # É idempotente: reaproveita o endpoint se ele já existir e pula o deploy se o
 # modelo já estiver servido ali.
 #
-# >>> ATENÇÃO — CUSTO <<<
-# Um modelo deployado cobra POR NODE-HORA, 24h por dia, MESMO SEM TRÁFEGO, e o
-# endpoint não desliga sozinho. Ao terminar, rode o teardown de
+# >>> ATENÇÃO — CONSUMO DE CRÉDITOS <<<
+# Um modelo deployado consome créditos POR NODE-HORA, 24/7, MESMO SEM TRÁFEGO, e
+# o endpoint não desliga sozinho. Ao terminar, rode o teardown de
 # ../05-encerramento-custos.md (undeploy -> delete endpoint -> delete model).
 #
 # Uso:
@@ -111,7 +111,7 @@ if [[ "${DEPLOYED}" == *"/models/${MODEL_ID}"* ]]; then
   echo "    o modelo ${MODEL_ID} já está servido neste endpoint — pulando o deploy"
 else
   echo "    deployando ${MODEL_ID} em ${ENDPOINT_ID}"
-  echo "    >>> isto leva de 10 a 20 minutos e INICIA A COBRANÇA por node-hora <<<"
+  echo "    >>> isto leva de 10 a 20 minutos e INICIA O CONSUMO DE CRÉDITOS por node-hora <<<"
   gcloud ai endpoints deploy-model "${ENDPOINT_ID}" \
     --project="${PROJECT_ID}" \
     --region="${REGION}" \
@@ -160,7 +160,7 @@ DEPLOYED_MODEL_ID="$(gcloud ai endpoints describe "${ENDPOINT_ID}" \
 
 cat <<EOF
 =============================================================================
- O ENDPOINT ESTÁ LIGADO E COBRANDO POR NODE-HORA, 24h POR DIA.
+ O ENDPOINT ESTÁ LIGADO E CONSUMINDO CRÉDITOS POR NODE-HORA, 24/7, MESMO SEM TRÁFEGO.
  Ao terminar a aula, rode nesta ordem (veja ../05-encerramento-custos.md):
 
    gcloud ai endpoints undeploy-model ${ENDPOINT_ID} \\

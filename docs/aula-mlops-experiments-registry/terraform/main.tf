@@ -20,7 +20,7 @@
 # Detalhamento em ../01-setup-gcp.md, secao "O que o Terraform NAO faz".
 #
 # TEARDOWN: `terraform destroy` NAO e' o caminho de encerramento da aula.
-# Ele nao remove o que mais custa (modelo implantado no endpoint, cobrado por
+# Ele nao remove o que mais custa (modelo implantado no endpoint, tarifado por
 # node-hora 24/7). Use `bash ../scripts/30_teardown.sh`.
 ###############################################################################
 

@@ -21,7 +21,7 @@ Este documento acompanha as **seções 1 a 5** do notebook
 
 > **Atenção ao TensorBoard automático.** Ao associar um experimento com
 > `aiplatform.init(..., experiment=...)`, o SDK **cria sozinho** uma instância *Default Tensorboard* no
-> projeto — e ela cobra por armazenamento. Nesta aula isso **não acontece porque passamos
+> projeto — e ela é tarifada por armazenamento. Nesta aula isso **não acontece porque passamos
 > `experiment_tensorboard=False`** (veja o bloco da seção 5). Sem esse parâmetro, a instância aparece; é
 > por isso que o `scripts/30_teardown.sh` verifica a lista de TensorBoards no encerramento.
 

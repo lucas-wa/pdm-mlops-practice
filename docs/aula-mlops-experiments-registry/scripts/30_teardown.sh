@@ -3,8 +3,8 @@
 # 30_teardown.sh — encerra TODOS os recursos criados nesta aula, na ordem
 # correta (do mais caro ao mais barato), de forma IDEMPOTENTE.
 #
-# Rode este script ao final da aula. O item 1 e' o que realmente custa: um
-# modelo implantado em endpoint cobra por node-hora 24/7, MESMO SEM TRAFEGO.
+# Rode este script ao final da aula. O item 1 e' o que mais consome creditos:
+# um modelo implantado em endpoint consome por node-hora 24/7, MESMO SEM TRAFEGO.
 #
 # Ordem executada:
 #   1. undeploy do(s) modelo(s) no endpoint  -> depois delete do endpoint
