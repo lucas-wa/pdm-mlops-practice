@@ -1,31 +1,33 @@
 # 05 — Encerramento e custos
 
-Este é o documento mais importante da aula. Ele encerra os recursos criados, na ordem correta, e configura o acompanhamento do consumo dos créditos.
+O documento mais importante da aula: encerra os recursos criados, **na ordem correta**, e configura o
+acompanhamento do consumo dos créditos.
 
-> **A turma usa créditos educacionais do Google Cloud — não há cobrança no cartão de ninguém.** Os créditos, porém, são **finitos**: tudo o que fica ligado consome saldo que faria falta nas próximas atividades. Encerrar os recursos é **higiene de ambiente**, e faz parte da entrega.
+> **A turma usa créditos educacionais do Google Cloud — não há cobrança no cartão de ninguém.** Os
+> créditos, porém, são **finitos**: tudo o que fica ligado consome saldo que faria falta nas próximas
+> atividades. Encerrar é **higiene de ambiente**, e faz parte da entrega.
 
 > **Execute este checklist ao final da aula, com a turma, item a item.**
 >
-> O recurso que mais consome créditos nesta aula — o **Endpoint com modelo implantado** — consome **por node-hora, 24 horas por dia, mesmo sem nenhuma requisição**. Ele não desliga sozinho. Se ficar esquecido, segue queimando créditos indefinidamente.
-
-Tudo o que está aqui também está automatizado, na mesma ordem e de forma idempotente, em [`scripts/30_teardown.sh`](scripts/30_teardown.sh).
+> O recurso que mais consome créditos — o **Endpoint com modelo implantado** — consome **por node-hora,
+> 24 horas por dia, mesmo sem nenhuma requisição**. Ele não desliga sozinho.
 
 ---
 
-## 1. Ordem de consumo (do que mais consome créditos ao que menos consome)
-
-Encerre **nesta ordem**. Ela não é arbitrária: além de resolver primeiro o que mais consome, respeita as dependências entre os recursos.
+## 1. Ordem de encerramento (do que mais consome ao que menos consome)
 
 | # | Recurso | Por que consome créditos | Urgência |
 |---|---|---|---|
 | 1 | **Endpoint com modelo implantado** | Nós tarifados **por hora, 24/7**, mesmo ociosos. Não desliga sozinho | **Crítica** |
 | 2 | **Runtime do notebook** (BigQuery Studio / Colab Enterprise; ou VM do Workbench) | Consome enquanto está ativo | Alta |
-| 3 | **Instância de TensorBoard** | Consumo por armazenamento, na ordem de **US$ 10/GiB/mês**. Nesta aula **não criamos nenhuma porque passamos `experiment_tensorboard=False`** no `aiplatform.init(...)` — sem esse parâmetro o SDK criaria uma sozinha | Média (se existir) |
-| 4 | **Modelo, versões e objetos no GCS** | Consumo baixo, de armazenamento | Baixa |
+| 3 | **Instância de TensorBoard** | Armazenamento, na ordem de **US$ 10/GiB/mês**. Nesta aula **não criamos nenhuma porque passamos `experiment_tensorboard=False`** no `aiplatform.init(...)` — sem esse parâmetro o SDK criaria uma sozinho | Média (se existir) |
+| 4 | **Modelo, versões e objetos no GCS** | Armazenamento, consumo baixo | Baixa |
 
-> **Dependência que quebra o teardown:** não é possível deletar um modelo que ainda está **implantado** em um endpoint. É preciso fazer o **undeploy** primeiro. Por isso o passo 1 vem antes do passo 4 — e por isso tentar apagar o modelo primeiro gera um erro que costuma travar a turma.
+> **Dependência que quebra o teardown:** não é possível deletar um modelo ainda **implantado** em um
+> endpoint. É preciso fazer o **undeploy** primeiro — por isso o passo 1 vem antes do passo 4.
 
-> **Registrar modelo no Model Registry é GRATUITO.** Não há tarifa pelo registro nem pelo versionamento. O que consome crédito é o armazenamento do artefato no GCS (centavos) e, principalmente, o **endpoint** onde a versão é implantada.
+> **Registrar modelo no Model Registry é GRATUITO.** Consome crédito o artefato no GCS (centavos) e,
+> principalmente, o **endpoint**.
 
 ---
 
@@ -33,60 +35,17 @@ Encerre **nesta ordem**. Ela não é arbitrária: além de resolver primeiro o q
 
 ### 2.1 Undeploy do modelo
 
-**Console:**
-
-1. Console do Google Cloud → **Vertex AI** → **Online prediction** → **Endpoints**.
-2. Confirmar a região **`us-central1`** no seletor.
+1. Console → **Vertex AI** → **Online prediction** → **Endpoints**.
+2. Confirmar a região **`us-central1`**.
 3. Clicar em **`rf-preco-imoveis-endpoint`**.
-4. Na lista de modelos implantados, no menu de três pontos da linha do modelo, escolher **Undeploy model** (*Remover implantação do modelo*).
-5. Confirmar e **aguardar a conclusão**. Enquanto o undeploy não terminar, os nós continuam consumindo créditos.
-
-**gcloud:**
-
-```bash
-export PROJECT_ID="SEU_PROJECT_ID"
-export REGION="us-central1"
-
-# 1. Localizar o endpoint
-gcloud ai endpoints list \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --filter="displayName=rf-preco-imoveis-endpoint" \
-  --format="value(name)"
-
-export ENDPOINT_ID="<id_retornado_acima>"
-
-# 2. Descobrir o deployed model id
-gcloud ai endpoints describe "${ENDPOINT_ID}" \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --format="value(deployedModels[].id)"
-
-export DEPLOYED_MODEL_ID="<id_retornado_acima>"
-
-# 3. Undeploy
-gcloud ai endpoints undeploy-model "${ENDPOINT_ID}" \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --deployed-model-id="${DEPLOYED_MODEL_ID}"
-```
+4. Na lista de modelos implantados, menu de três pontos da linha do modelo → **Undeploy model**.
+5. Confirmar e **aguardar a conclusão**. Enquanto o undeploy não terminar, os nós continuam consumindo.
 
 ### 2.2 Deleção do endpoint
 
-**Console:**
-
-1. Ainda em **Vertex AI** → **Online prediction** → **Endpoints**.
+1. Voltar à lista de **Endpoints**.
 2. Marcar **`rf-preco-imoveis-endpoint`** (agora sem modelos implantados).
-3. **Delete** (*Excluir*) e confirmar.
-
-**gcloud:**
-
-```bash
-gcloud ai endpoints delete "${ENDPOINT_ID}" \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --quiet
-```
+3. **Delete** e confirmar.
 
 - [ ] Undeploy concluído
 - [ ] Endpoint deletado
@@ -98,58 +57,22 @@ gcloud ai endpoints delete "${ENDPOINT_ID}" \
 
 ### 3.1 BigQuery Studio / Colab Enterprise (ambiente desta aula)
 
-Há desligamento automático por inatividade (aproximadamente **180 minutos**), mas **apagar o runtime é o que garante** o encerramento imediato.
+Há auto-desligamento por inatividade (~**180 minutos**), mas **apagar o runtime é o que garante** o
+encerramento imediato.
 
-**Console:**
-
-1. Console → **Vertex AI** → **Colab Enterprise** → **Runtimes** (*Ambientes de execução*).
+1. Console → **Vertex AI** → **Colab Enterprise** → **Runtimes**.
 2. Confirmar a região **`us-central1`**.
-3. Selecionar o runtime usado na aula.
-4. **Delete** (*Excluir*). Apenas desconectar o notebook **não** encerra o runtime.
+3. Selecionar o runtime da aula → **Delete**.
 
-Alternativa pelo BigQuery: **BigQuery** → **BigQuery Studio** → menu do notebook → desconectar e, em seguida, apagar o runtime pela tela do Colab Enterprise acima.
-
-**gcloud:**
-
-```bash
-gcloud colab runtimes list \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}"
-
-gcloud colab runtimes delete RUNTIME_ID \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --quiet
-```
-
-> Se o comando `gcloud colab` não estiver disponível na sua versão do SDK, use o console. O caminho pelo console é o oficial da aula.
+Apenas desconectar o notebook **não** encerra o runtime.
 
 ### 3.2 Vertex AI Workbench (só se alguém usou)
 
-Workbench é uma **VM**: ela consome créditos enquanto estiver ligada, mesmo sem notebook aberto.
-
-**Console:**
+Workbench é uma **VM**: consome créditos enquanto ligada, mesmo sem notebook aberto.
 
 1. Console → **Vertex AI** → **Workbench** → **Instances**.
-2. **Stop** (*Parar*) a instância — interrompe o consumo de computação.
-3. **Delete** (*Excluir*) a instância — encerra também o disco.
-
-**gcloud:**
-
-```bash
-gcloud workbench instances list \
-  --project="${PROJECT_ID}" \
-  --location="${REGION}-a"
-
-gcloud workbench instances stop INSTANCE_NAME \
-  --project="${PROJECT_ID}" \
-  --location="${REGION}-a"
-
-gcloud workbench instances delete INSTANCE_NAME \
-  --project="${PROJECT_ID}" \
-  --location="${REGION}-a" \
-  --quiet
-```
+2. **Stop** — interrompe a computação.
+3. **Delete** — encerra também o disco.
 
 - [ ] Runtime do BigQuery Studio / Colab Enterprise deletado
 - [ ] Instância do Workbench parada e deletada (se houver)
@@ -158,29 +81,18 @@ gcloud workbench instances delete INSTANCE_NAME \
 
 ## 4. Passo 3 — TensorBoard (verificação)
 
-> **Nesta aula NÃO criamos nenhuma instância de TensorBoard — porque passamos `experiment_tensorboard=False` no `aiplatform.init(...)`.** As métricas-resumo do Vertex AI Experiments (`mae`, `mae_baseline`) **não exigem TensorBoard**, e com esse parâmetro o rastreamento sai praticamente sem custo.
+> **Nesta aula NÃO criamos nenhuma instância de TensorBoard — porque passamos
+> `experiment_tensorboard=False` no `aiplatform.init(...)`.** As métricas-resumo do Experiments (`mae`,
+> `mae_baseline`) não exigem TensorBoard.
 
-**Sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* automaticamente** ao associar o experimento no `init` — não é preciso pedir nada, nem usar `log_time_series_metrics`. Por isso este passo é uma **verificação**, e não uma formalidade: se alguém rodou o `init` sem `experiment_tensorboard=False` (ou seguiu outro tutorial), a instância está lá. O consumo é por **armazenamento**, na ordem de **US$ 10 por GiB por mês** — **confirme o valor atual no pricing do Vertex AI ao vivo**, porque preços mudam.
-
-**Console:**
+**Sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* automaticamente** ao associar o
+experimento. Por isso este passo é uma **verificação**: se alguém rodou o `init` sem o parâmetro, a
+instância está lá, consumindo por **armazenamento** (na ordem de US$ 10/GiB/mês — confirme o valor atual
+no pricing ao vivo).
 
 1. Console → **Vertex AI** → **Experiments** → aba **TensorBoard instances**.
 2. Confirmar a região **`us-central1`**.
 3. Se houver alguma instância, selecionar e **Delete**.
-
-**gcloud:**
-
-```bash
-gcloud ai tensorboards list \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}"
-
-# Apenas se a lista acima retornar algo
-gcloud ai tensorboards delete TENSORBOARD_ID \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --quiet
-```
 
 - [ ] Lista de TensorBoard instances verificada e **vazia**
 
@@ -188,78 +100,32 @@ gcloud ai tensorboards delete TENSORBOARD_ID \
 
 ## 5. Passo 4 — Modelo, versões e objetos no GCS
 
-Consumo baixo, mas o passo mantém o projeto limpo e fecha o ciclo da aula.
-
 ### 5.1 Versões e modelo no Model Registry
 
-**Console:**
+1. Console → **Vertex AI** → **Model Registry**, região **`us-central1`**.
+2. Clicar em **`rf-preco-imoveis`** → aba de **versões**.
+3. Deletar as **versões** (três pontos → *Delete version*) e depois o **modelo**.
 
-1. Console → **Vertex AI** → **Model Registry**.
-2. Confirmar a região **`us-central1`**.
-3. Clicar em **`rf-preco-imoveis`** → aba de **versões**.
-4. Deletar as **versões** (menu de três pontos → *Delete version*) e depois o **modelo**.
-
-**gcloud:**
-
-```bash
-# Listar modelos
-gcloud ai models list \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --filter="displayName=rf-preco-imoveis"
-
-export MODEL_ID="<id_retornado_acima>"
-
-# Listar versões
-gcloud ai models list-version "${MODEL_ID}" \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}"
-
-# Deletar uma versão específica
-gcloud ai models delete-version "${MODEL_ID}@2" \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --quiet
-
-# Deletar o modelo (todas as versões)
-gcloud ai models delete "${MODEL_ID}" \
-  --project="${PROJECT_ID}" \
-  --region="${REGION}" \
-  --quiet
-```
-
-> Se a deleção falhar com erro de modelo em uso, **o undeploy do passo 1 não foi concluído**. Volte à seção 2.
+> Se a deleção falhar com erro de modelo em uso, **o undeploy do passo 1 não foi concluído**. Volte à
+> seção 2.
 
 ### 5.2 Objetos no bucket da aula
 
-**Console:**
-
 1. Console → **Cloud Storage** → **Buckets** → **`${PROJECT_ID}-mlops-aula`**.
-2. Entrar na pasta `models/` e excluir os objetos da aula.
+2. Entrar em `models/` e excluir os objetos da aula.
 
-**gcloud / gcloud storage:**
-
-```bash
-# Conferir o que existe antes de apagar
-gcloud storage ls -r "gs://${PROJECT_ID}-mlops-aula/"
-
-# Remover os artefatos do modelo
-gcloud storage rm -r "gs://${PROJECT_ID}-mlops-aula/models/"
-```
-
-O SDK do Vertex AI usa o mesmo bucket como **staging** (`staging_bucket` no `aiplatform.init`) e pode ter criado pastas auxiliares. Como `${PROJECT_ID}-mlops-aula` é dedicado a esta aula, é seguro esvaziá-lo por inteiro:
-
-```bash
-gcloud storage rm -r "gs://${PROJECT_ID}-mlops-aula/**"
-```
+O SDK usa o mesmo bucket como **staging** e pode ter criado pastas auxiliares. Como
+`${PROJECT_ID}-mlops-aula` é dedicado a esta aula, é seguro esvaziá-lo por inteiro.
 
 > **NÃO APAGUE A INFRAESTRUTURA COMPARTILHADA**
 >
-> - O bucket **`${PROJECT_ID}-aula-pdm`** é das aulas anteriores e será usado no Dia 2. **Não apague, não esvazie.**
+> - O bucket **`${PROJECT_ID}-aula-pdm`** é das aulas anteriores e será usado no Dia 2. **Não apague,
+>   não esvazie.**
 > - O dataset **`aula_pdm`** e a **tabela gold** também permanecem. **Não apague.**
 > - Apagar por engano é **irreversível** e derruba o material das próximas aulas.
 >
-> Só o bucket **`${PROJECT_ID}-mlops-aula`** (com sufixo `-mlops-aula`) contém artefatos desta aula. Confira o sufixo do nome antes de executar qualquer `rm -r`.
+> Só o bucket com sufixo **`-mlops-aula`** contém artefatos desta aula. Confira o sufixo antes de
+> apagar qualquer coisa.
 
 - [ ] Versões do modelo deletadas
 - [ ] Modelo `rf-preco-imoveis` deletado
@@ -268,82 +134,34 @@ gcloud storage rm -r "gs://${PROJECT_ID}-mlops-aula/**"
 
 ---
 
-## 6. Teardown automatizado
+## 6. Budgets e alertas — acompanhar o consumo dos créditos
 
-O script [`scripts/30_teardown.sh`](scripts/30_teardown.sh) executa os passos 1 a 4 na mesma ordem, de forma idempotente (pode ser rodado mais de uma vez sem erro).
+Como a turma usa créditos educacionais, o budget não evita cobrança: ele **acompanha quanto dos créditos
+já foi consumido** e avisa quando algo consome mais que o esperado. Um budget **não bloqueia nada**.
 
-```bash
-export PROJECT_ID="SEU_PROJECT_ID"
-export REGION="us-central1"
+1. Console → **Billing** → selecionar a conta de faturamento.
+2. Menu lateral → **Budgets & alerts** → **Create budget**.
+3. **Scope**: restringir ao projeto `SEU_PROJECT_ID`.
+4. **Amount**: um valor baixo e realista — por exemplo **US$ 50**.
+5. **Actions / Thresholds**: alertas em **50%**, **90%** e **100%**.
+6. Confirmar os destinatários dos e-mails e salvar.
 
-bash scripts/30_teardown.sh
-```
-
-> O script é uma conveniência de autoestudo. **Na aula, faça o teardown pelo console**, para que os alunos vejam cada recurso desaparecendo e entendam o que estão apagando. Depois confirme com a varredura da seção 9.
-
----
-
-## 7. Budgets e alertas — acompanhar o consumo dos créditos
-
-Como a turma usa **créditos educacionais**, o budget aqui não serve para evitar cobrança: ele serve para **acompanhar quanto dos créditos já foi consumido** e avisar quando algo está consumindo mais do que o esperado. Um budget **não bloqueia nada** — ele **avisa**. Ainda assim, é a diferença entre descobrir um endpoint esquecido em dois dias ou em dois meses.
-
-### 7.1 Console
-
-1. Console → **Billing** (*Faturamento*) → selecionar a conta de faturamento.
-2. Menu lateral → **Budgets & alerts** (*Orçamentos e alertas*).
-3. **Create budget** (*Criar orçamento*).
-4. **Scope** (*Escopo*): restringir ao projeto `SEU_PROJECT_ID`.
-5. **Amount** (*Valor*): um valor baixo e realista para a atividade — por exemplo **US$ 50** de consumo de créditos.
-6. **Actions / Thresholds** (*Regras de limite*): marcar alertas em **50%**, **90%** e **100%**.
-7. Confirmar os destinatários dos e-mails de alerta e salvar.
-
-### 7.2 gcloud
-
-```bash
-gcloud billing budgets create \
-  --billing-account=SEU_BILLING_ACCOUNT_ID \
-  --display-name="aula-mlops-vertex" \
-  --budget-amount=50USD \
-  --threshold-rule=percent=0.5 \
-  --threshold-rule=percent=0.9 \
-  --threshold-rule=percent=1.0
-```
-
-Para restringir ao projeto da aula, acrescente o filtro de projeto:
-
-```bash
-gcloud billing budgets create \
-  --billing-account=SEU_BILLING_ACCOUNT_ID \
-  --display-name="aula-mlops-vertex" \
-  --budget-amount=50USD \
-  --threshold-rule=percent=0.5 \
-  --threshold-rule=percent=0.9 \
-  --threshold-rule=percent=1.0 \
-  --filter-projects="projects/SEU_PROJECT_ID"
-```
-
-Listar e conferir:
-
-```bash
-gcloud billing budgets list --billing-account=SEU_BILLING_ACCOUNT_ID
-```
-
-> **O alerta avisa, não corta.** Nenhum threshold interrompe recursos automaticamente, e o consumo de créditos segue igual. O budget é um detector de fumaça, não um extintor — o extintor é este checklist.
+> **O alerta avisa, não corta.** O budget é um detector de fumaça; o extintor é este checklist.
 
 ---
 
-## 8. Créditos educacionais — o que eles cobrem e o que não cobrem
+## 7. Créditos educacionais — o que eles cobrem
 
-Os alunos desta disciplina usam **créditos educacionais do Google Cloud** (Google Cloud for Education / cupom da disciplina). Dois pontos importantes para a turma:
+- **Não há cobrança no cartão de ninguém.** O consumo sai do saldo de créditos do projeto. Não existe
+  "fatura surpresa" nesta atividade.
+- **Os créditos são finitos e não voltam.** Um endpoint esquecido queima crédito todo dia, e crédito
+  queimado não volta ao saldo. Por isso o teardown vale: é higiene de ambiente.
 
-- **Não há cobrança no cartão de ninguém.** O consumo sai do saldo de créditos do projeto, não de um meio de pagamento pessoal. Não existe "fatura surpresa" nesta atividade.
-- **Os créditos são finitos e não voltam.** Um endpoint esquecido queima crédito todo dia, e crédito queimado não volta para o saldo. Por isso o teardown continua valendo: é **higiene de ambiente**, para que o saldo fique disponível para as próximas atividades.
-
-Onde conferir: Console → **Billing** → **Overview**, no painel de créditos (saldo restante e validade).
+Onde conferir: Console → **Billing** → **Overview**, no painel de créditos (saldo e validade).
 
 ---
 
-## 9. Confira que nada ficou ligado
+## 8. Confira que nada ficou ligado
 
 > **VARREDURA FINAL — percorra os cinco itens antes de fechar o console**
 >
@@ -353,11 +171,11 @@ Onde conferir: Console → **Billing** → **Overview**, no painel de créditos 
 > |---|---|---|
 > | 1 | Vertex AI → Online prediction → **Endpoints** | Lista **vazia** (nenhum `rf-preco-imoveis-endpoint`) |
 > | 2 | Vertex AI → Colab Enterprise → **Runtimes** · e Workbench → **Instances** | **Nenhum** runtime ativo, **nenhuma** instância ligada |
-> | 3 | Vertex AI → Experiments → **TensorBoard instances** | Lista **vazia** (é o que se espera com `experiment_tensorboard=False`; confira mesmo assim) |
+> | 3 | Vertex AI → Experiments → **TensorBoard instances** | Lista **vazia** (esperado com `experiment_tensorboard=False`; confira mesmo assim) |
 > | 4 | Vertex AI → **Model Registry** | Sem `rf-preco-imoveis` |
 > | 5 | Cloud Storage → **`${PROJECT_ID}-mlops-aula`** | Sem os objetos em `models/` |
 >
-> E, por último, a verificação inversa:
+> E a verificação inversa:
 >
 > | Manter | O que **deve continuar existindo** |
 > |---|---|
@@ -365,27 +183,24 @@ Onde conferir: Console → **Billing** → **Overview**, no painel de créditos 
 > | Sim | Dataset **`aula_pdm`** e a tabela gold |
 > | Sim | O **experimento** `preco-imoveis-rf` (metadados de runs não geram custo relevante e servem de evidência da entrega) |
 
-Conferência rápida por linha de comando:
-
-```bash
-gcloud ai endpoints list --project="${PROJECT_ID}" --region="${REGION}"
-gcloud ai models     list --project="${PROJECT_ID}" --region="${REGION}"
-gcloud ai tensorboards list --project="${PROJECT_ID}" --region="${REGION}"
-gcloud storage ls "gs://${PROJECT_ID}-mlops-aula/"
-```
-
-As três primeiras devem voltar vazias para os recursos da aula.
-
 ---
 
-## 10. Retomando os conceitos
+## 9. Retomando os conceitos
 
 | Recurso | Consome créditos quando | Encerra como |
 |---|---|---|
-| Vertex AI **Experiments** (métricas-resumo) | Praticamente não consome — desde que o `init` use `experiment_tensorboard=False` e nenhum TensorBoard seja criado | Pode ficar |
-| **Model Registry** | Registrar é **grátis**; consome-se apenas o artefato no GCS | Deletar versões e modelo |
+| Vertex AI **Experiments** (métricas-resumo) | Praticamente não consome — desde que o `init` use `experiment_tensorboard=False` | Pode ficar |
+| **Model Registry** | Registrar é **grátis**; consome-se só o artefato no GCS | Deletar versões e modelo |
 | **Endpoint** com modelo implantado | **Por node-hora, 24/7, mesmo ocioso** | **Undeploy → delete** |
 | **Runtime** do notebook | Enquanto ativo (auto-shutdown ~180 min) | Deletar o runtime |
 | **TensorBoard** | Por GiB armazenado/mês | Deletar a instância |
 
-Volte ao [`README.md`](README.md) para o índice completo, ou ao [`roteiro-condutor.md`](roteiro-condutor.md) para ver como este bloco se encaixa nos minutos 45–55 da aula.
+---
+
+Equivalentes em CLI e IaC: veja [`gcloud/README.md`](gcloud/README.md) e [`terraform/README.md`](terraform/README.md).
+O script [`gcloud/30_teardown.sh`](gcloud/30_teardown.sh) executa os passos 1 a 4 na mesma ordem, de
+forma idempotente — mas **na aula faça o teardown pelo console**, para que os alunos vejam cada recurso
+desaparecendo.
+
+Volte ao [`README.md`](README.md) para o índice, ou ao [`roteiro-condutor.md`](roteiro-condutor.md) para
+ver como este bloco se encaixa nos minutos 45–55.

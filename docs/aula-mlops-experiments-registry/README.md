@@ -6,19 +6,17 @@ Tutorial de aproximadamente 1 hora, conduzido ao vivo pelo console do Google Clo
 >
 > A turma usa **créditos educacionais do Google Cloud**: **não há cobrança no cartão de ninguém**. Os créditos, porém, são **finitos**.
 >
-> Esta aula cria recursos que **consomem créditos por hora enquanto existirem**, mesmo sem nenhum tráfego. O principal deles é o **Endpoint com modelo implantado** (`rf-preco-imoveis-endpoint`): os nós ficam ligados 24/7 até você fazer o *undeploy* e apagar o endpoint.
+> Esta aula cria recursos que **consomem créditos por hora enquanto existirem**, mesmo sem tráfego. O maior consumidor é o **Endpoint com modelo implantado** (`rf-preco-imoveis-endpoint`): os nós ficam ligados 24/7 até o *undeploy* e a deleção do endpoint.
 >
-> **Ao terminar a aula, execute o checklist de encerramento:** [`05-encerramento-custos.md`](05-encerramento-custos.md). É higiene de ambiente — mantém o saldo de créditos disponível para as próximas atividades.
->
-> O encerramento é feito **ao vivo, junto com a turma**, nos últimos minutos da aula. Não deixe para depois.
+> **Ao terminar, execute o checklist de encerramento:** [`05-encerramento-custos.md`](05-encerramento-custos.md). É higiene de ambiente — mantém o saldo disponível para as próximas atividades. Ele é feito **ao vivo, junto com a turma**, nos últimos minutos da aula. Não deixe para depois.
 
 ---
 
 ## 1. O que é MLOps, em três frases
 
-**Vertex AI Experiments** guarda o histórico de cada treino — parâmetros, métricas e artefatos — para que duas execuções possam ser comparadas em vez de discutidas de memória. **Vertex AI Model Registry** guarda o modelo treinado como um objeto versionado, com identidade e alias, separando "treinei um modelo" de "este é o modelo oficial". **Vertex AI Endpoint** publica uma versão registrada atrás de uma API HTTP, transformando o artefato em um serviço que responde a predições.
+**Vertex AI Experiments** guarda o histórico de cada treino — parâmetros, métricas e artefatos — para comparar duas execuções em vez de discuti-las de memória. **Vertex AI Model Registry** guarda o modelo como objeto versionado, com identidade e alias, separando "treinei um modelo" de "este é o modelo oficial". **Vertex AI Endpoint** publica uma versão registrada atrás de uma API HTTP.
 
-MLOps é, na prática, a disciplina que liga essas três coisas: **rastrear** o que foi feito, **versionar** o que foi produzido e **publicar** o que foi aprovado — de forma que outra pessoa consiga reproduzir, auditar e reverter.
+MLOps liga essas três coisas: **rastrear** o que foi feito, **versionar** o que foi produzido e **publicar** o que foi aprovado — de forma que outra pessoa consiga reproduzir, auditar e reverter.
 
 ## 2. Objetivos de aprendizagem
 
@@ -46,13 +44,11 @@ O detalhamento dos pré-requisitos e o **contrato de dados** estão em [`00-pre-
 
 ## 4. Como esta aula é conduzida
 
-- **Ao vivo, pelo console.** Todo o caminho demonstrado pelo docente usa a interface do Google Cloud (Vertex AI → Experiments, Model Registry, Online prediction) e o notebook no BigQuery Studio. É o caminho que os alunos acompanham na tela.
-- **gcloud e Terraform são material de autoestudo.** Os scripts em [`scripts/`](scripts/) e o módulo em [`terraform/`](terraform/) reproduzem o mesmo resultado por linha de comando e por infraestrutura como código. Eles existem para o aluno comparar os três caminhos depois da aula — **não** serão executados durante o encontro.
-- **Nem tudo tem equivalente em IaC.** Experiments, registro de modelo e deploy em endpoint **não são gerenciados pelo Terraform**; ficam em SDK, gcloud ou console. Isso está explicitado em [`01-setup-gcp.md`](01-setup-gcp.md).
+- **Ao vivo, pelo console.** Todo o caminho usa a interface do Google Cloud (Vertex AI → Experiments, Model Registry, Online prediction) e o notebook no BigQuery Studio. Os arquivos numerados `00`–`05` na raiz são esse caminho.
+- **gcloud e Terraform são autoestudo.** [`gcloud/`](gcloud/README.md) e [`terraform/`](terraform/README.md) reproduzem o mesmo resultado por linha de comando e por infraestrutura como código, para o aluno comparar depois da aula — **não** serão executados durante o encontro.
+- **Nem tudo tem equivalente em IaC.** Experiments, registro de modelo e deploy em endpoint **não são gerenciados pelo Terraform**; ficam em SDK, gcloud ou console. Detalhes em [`terraform/README.md`](terraform/README.md).
 
-> **Nota sobre nomes no console**
->
-> A documentação do Google está em processo de rebrand e aparece como **"Gemini Enterprise Agent Platform"** em várias páginas, enquanto o **console ainda exibe "Vertex AI"**. Os rótulos usados aqui seguem o console. Confirme os nomes ao vivo antes da aula — menus podem ter mudado de lugar.
+> **Nomes no console.** A documentação do Google já aparece como **"Gemini Enterprise Agent Platform"**, mas o **console ainda exibe "Vertex AI"** — os rótulos aqui seguem o console. Confirme os menus ao vivo antes da aula.
 
 ## 5. Convenções de nomes
 
@@ -87,30 +83,46 @@ Estes nomes são usados **exatamente assim** em todos os arquivos, notebooks e s
 
 Com o deploy em endpoint, a aula pode esticar para **75–90 minutos**. O caminho **sem deploy** (treino → Experiments → Registry) é o *fallback* rápido quando o tempo apertar. Detalhes e contingências no [`roteiro-condutor.md`](roteiro-condutor.md).
 
-## 7. Índice do material
+## 7. Estrutura do material
 
-### Documentos da aula
+```
+aula-mlops-experiments-registry/
+  README.md  roteiro-condutor.md
+  00-pre-requisitos-e-gold.md
+  01-setup-gcp.md              <- caminho CONSOLE (o da aula)
+  02-treino-e-experiments.md
+  03-model-registry.md
+  04-deploy-endpoint.md
+  05-encerramento-custos.md
+  notebooks/treino_experiments_registry.ipynb
+  gcloud/      <- os mesmos passos por linha de comando (autoestudo)
+  terraform/   <- APIs, bucket e dataset como código (autoestudo)
+```
+
+### Caminho da aula (console) — raiz
 
 | Arquivo | Conteúdo |
 |---|---|
 | [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md) | Checklist de pré-requisitos, contrato de dados, anti-vazamento, dedup, baseline e como confirmar o schema da gold |
-| [`01-setup-gcp.md`](01-setup-gcp.md) | APIs, IAM, bucket e dataset — Console, gcloud e Terraform lado a lado |
+| [`01-setup-gcp.md`](01-setup-gcp.md) | APIs, IAM, bucket e dataset pelo console |
 | [`02-treino-e-experiments.md`](02-treino-e-experiments.md) | Leitura da gold, treino do RandomForest, baseline, MAE e registro das runs no Experiments |
 | [`03-model-registry.md`](03-model-registry.md) | Salvar `model.joblib` no GCS, registrar `rf-preco-imoveis`, versões e aliases |
 | [`04-deploy-endpoint.md`](04-deploy-endpoint.md) | Criar `rf-preco-imoveis-endpoint`, implantar o modelo e fazer predição online |
 | [`05-encerramento-custos.md`](05-encerramento-custos.md) | **Checklist de teardown**, budgets e alertas, créditos educacionais |
-| [`roteiro-condutor.md`](roteiro-condutor.md) | Roteiro minuto a minuto para o docente conduzir no console |
+| [`roteiro-condutor.md`](roteiro-condutor.md) | Roteiro minuto a minuto para o docente |
+| [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) | Notebook executável de ponta a ponta no BigQuery Studio |
 
-### Código e automação
+### Caminhos alternativos (autoestudo)
 
 | Caminho | Conteúdo |
 |---|---|
-| [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) | Notebook executável de ponta a ponta no BigQuery Studio |
-| [`terraform/`](terraform/) | APIs, bucket e dataset como código (autoestudo) |
-| [`scripts/00_setup.sh`](scripts/00_setup.sh) | Habilita APIs, aplica IAM, cria bucket e dataset via gcloud |
-| [`scripts/10_register_model.sh`](scripts/10_register_model.sh) | Registra o modelo no Model Registry via gcloud |
-| [`scripts/20_deploy_endpoint.sh`](scripts/20_deploy_endpoint.sh) | Cria o endpoint e implanta o modelo via gcloud |
-| [`scripts/30_teardown.sh`](scripts/30_teardown.sh) | **Encerra tudo na ordem correta** (undeploy → endpoint → modelo → artefatos) |
+| [`gcloud/README.md`](gcloud/README.md) | A aula inteira por linha de comando, numerada 0 a 5 |
+| [`gcloud/seed_gold.sh`](gcloud/seed_gold.sh) | Valida a camada gold e a reconstrói se estiver faltando ou mal formatada |
+| [`gcloud/00_setup.sh`](gcloud/00_setup.sh) | Habilita APIs, aplica IAM, cria bucket e dataset |
+| [`gcloud/10_register_model.sh`](gcloud/10_register_model.sh) | Registra o modelo no Model Registry |
+| [`gcloud/20_deploy_endpoint.sh`](gcloud/20_deploy_endpoint.sh) | Cria o endpoint e implanta o modelo |
+| [`gcloud/30_teardown.sh`](gcloud/30_teardown.sh) | **Encerra tudo na ordem correta** (undeploy → endpoint → modelo → artefatos) |
+| [`terraform/README.md`](terraform/README.md) | Provisionamento declarativo e **o que o Terraform NÃO faz** |
 
 ## 8. Ordem de leitura sugerida
 

@@ -1,6 +1,6 @@
 # 04 — Deploy em Endpoint e predição online
 
-Este documento cobre as **seções 8 e 9** do notebook
+Cobre as **seções 8 e 9** do notebook
 [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb): subir o
 modelo registrado num **Endpoint** do Vertex AI e fazer a primeira predição online.
 
@@ -12,39 +12,35 @@ modelo registrado num **Endpoint** do Vertex AI e fazer a primeira predição on
 | Máquina | `n1-standard-2`, 1 réplica |
 | Container | `us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-6:latest` |
 
-> ## 💸 ATENÇÃO — este é o passo que mais consome créditos
+> ## 💸 Este é o passo que mais consome créditos
 >
-> A turma usa **créditos educacionais**, então não há cobrança em cartão. Mas um modelo deployado consome
-> créditos **por node-hora, 24 horas por dia, mesmo sem nenhuma requisição**. Com
-> `min-replica-count=1`, há uma máquina `n1-standard-2` ligada até alguém desligá-la. O endpoint **não**
-> tem auto-desligamento por inatividade.
+> A turma usa **créditos educacionais** — não há cobrança em cartão. Mas um modelo implantado consome
+> **por node-hora, 24 horas por dia, mesmo sem nenhuma requisição**. Com `min-replica-count=1` há uma
+> `n1-standard-2` ligada até alguém desligá-la, e o endpoint **não** tem auto-desligamento.
 >
-> **Rode o checklist de [`05-encerramento-custos.md`](05-encerramento-custos.md) antes de encerrar a
-> aula.** Undeploy e deleção do endpoint são o primeiro item da lista, e por um bom motivo: é o que
-> impede o saldo de créditos de escorrer com o endpoint esquecido.
+> Rode o checklist de [`05-encerramento-custos.md`](05-encerramento-custos.md) antes de encerrar a aula.
+> Undeploy e deleção do endpoint são o primeiro item da lista.
 
-> ## ⏱️ ATENÇÃO — o deploy leva de 10 a 20 minutos
+> ## ⏱️ O deploy leva de 10 a 20 minutos
 >
-> **Dispare o deploy cedo.** O roteiro da aula manda iniciar este passo assim que o modelo estiver
-> registrado e usar o tempo de provisionamento para discutir Experiments e Model Registry. Se você deixar
-> para o fim, a aula acaba antes do endpoint ficar pronto.
+> **Dispare o deploy cedo**, assim que o modelo estiver registrado, e use o tempo de provisionamento
+> para discutir Experiments e Registry.
 >
 > **Contingência**: o docente mantém um **endpoint de referência já provisionado** para demonstrar a
-> predição caso o deploy do grupo não conclua a tempo. Ele serve só para a demonstração — não conta como
-> entrega do grupo, que deve mostrar o próprio endpoint funcionando (ou, no fallback sem deploy, o modelo
-> registrado no Registry).
+> predição caso o deploy do grupo não conclua a tempo — serve só para a demonstração, não conta como
+> entrega.
 >
-> **Erro transitório no deploy**: às vezes o `deploy-model` termina com `ERROR: ... System error. Please
-> try this operation again.` (falha de infraestrutura do lado do Google, não do seu modelo). O endpoint
-> continua criado e **vazio não consome créditos**. Basta **repetir o deploy** no mesmo endpoint — costuma funcionar
-> na segunda tentativa. Só investigue logs do container se falhar de forma consistente.
+> **Erro transitório**: às vezes o deploy termina com `ERROR: ... System error. Please try this
+> operation again.` (falha de infraestrutura do Google, não do seu modelo). O endpoint continua criado
+> e **vazio não consome créditos**: basta **repetir o deploy**. Só investigue logs do container se
+> falhar de forma consistente.
 
 ---
 
 ## O contrato de entrada — leia antes de testar
 
-O container pré-construído entrega as `instances` ao `predict` como **array posicional**: não há nomes de
-coluna no payload. A única coisa que liga um número à feature certa é a **posição**.
+O container pré-construído entrega as `instances` ao `predict` como **array posicional**: não há nomes
+de coluna no payload. A única coisa que liga um número à feature certa é a **posição**.
 
 > ### ORDEM CANÔNICA DO VETOR DE FEATURES
 >
@@ -61,9 +57,8 @@ coluna no payload. A única coisa que liga um número à feature certa é a **po
 > | 4 | `garagens` | int | `1` |
 
 Trocar `quartos` por `banheiros` no payload **não gera erro** — gera uma predição errada em silêncio.
-É por isso que a ordem está documentada no notebook, neste arquivo e nos scripts.
 
-`request.json` de exemplo (duas instâncias):
+Payload de exemplo (duas instâncias):
 
 ```json
 {
@@ -78,14 +73,12 @@ Trocar `quartos` por `banheiros` no payload **não gera erro** — gera uma pred
 
 ## 8. Criar o endpoint e fazer o deploy
 
-### 8.1. Console — Vertex AI → Online prediction
+### 8.1. Console — a partir do Model Registry
 
-**Criar o endpoint e deployar (caminho recomendado, a partir do Registry):**
-
-1. Console do Google Cloud → menu de navegação → **Vertex AI**.
-2. Menu lateral, seção *Deploy and use* → **Model Registry**. Região **us-central1**.
-3. Clique no modelo **`rf-preco-imoveis`** → escolha a versão (a marcada como *default*) → botão
-   **Deploy & test** → **Deploy to endpoint**.
+1. Console → menu de navegação → **Vertex AI**.
+2. Menu lateral, *Deploy and use* → **Model Registry**. Região **us-central1**.
+3. Clique em **`rf-preco-imoveis`** → escolha a versão *default* → **Deploy & test** →
+   **Deploy to endpoint**.
 4. **Define your endpoint**:
    - *Create new endpoint*;
    - **Endpoint name**: `rf-preco-imoveis-endpoint`;
@@ -94,30 +87,26 @@ Trocar `quartos` por `banheiros` no payload **não gera erro** — gera uma pred
 5. **Model settings**:
    - **Traffic split**: `100`;
    - **Machine type**: `n1-standard-2`;
-   - **Minimum number of compute nodes**: `1`;
-   - **Maximum number of compute nodes**: `1`;
-   - **Accelerator**: nenhum;
-   - *Logging*: pode deixar os padrões.
-6. **Model monitoring** e **Explainability**: pule (fora do escopo da aula).
-7. Clique em **Deploy**. ⏱️ **Agora espere de 10 a 20 minutos.** O status aparece em
-   **Vertex AI → Online prediction → Endpoints**; enquanto estiver *Deploying*, o endpoint ainda não
-   responde.
+   - **Minimum / Maximum number of compute nodes**: `1` e `1`;
+   - **Accelerator**: nenhum; *Logging*: padrões.
+6. **Model monitoring** e **Explainability**: pule.
+7. **Deploy**. ⏱️ **Agora espere de 10 a 20 minutos.** O status aparece em **Vertex AI → Online
+   prediction → Endpoints**; enquanto estiver *Deploying*, o endpoint ainda não responde.
 
-**Caminho alternativo (criar o endpoint vazio primeiro):**
-**Vertex AI → Online prediction → Endpoints → Create** → nome `rf-preco-imoveis-endpoint`, região
-`us-central1` → depois **Add model** para deployar a versão.
+**Caminho alternativo:** **Vertex AI → Online prediction → Endpoints → Create** → nome
+`rf-preco-imoveis-endpoint`, região `us-central1` → depois **Add model**.
 
 **Testar pelo console:**
 
-1. **Vertex AI → Online prediction → Endpoints** → clique em `rf-preco-imoveis-endpoint`.
-2. Aba **Test your model** (ou *Deploy & test* na tela do modelo).
-3. No campo de **JSON request**, cole o payload:
+1. **Vertex AI → Online prediction → Endpoints** → `rf-preco-imoveis-endpoint`.
+2. Aba **Test your model**.
+3. No campo **JSON request**, cole o payload:
 
    ```json
    {"instances": [[120.0, 150.0, 3, 2, 1]]}
    ```
 
-4. Clique em **Predict**. A resposta traz `predictions` com o preço estimado.
+4. **Predict**. A resposta traz `predictions` com o preço estimado.
 
 ### 8.2. SDK Python (o que roda no notebook)
 
@@ -155,72 +144,6 @@ print(resposta.model_version_id)        # qual VERSÃO respondeu
 print(resposta.deployed_model_id)
 ```
 
-### 8.3. gcloud
-
-O script [`scripts/20_deploy_endpoint.sh`](scripts/20_deploy_endpoint.sh) executa estes comandos de forma
-idempotente.
-
-**Criar o endpoint:**
-
-```bash
-gcloud ai endpoints create \
-  --region=us-central1 \
-  --display-name=rf-preco-imoveis-endpoint
-```
-
-**Descobrir os IDs:**
-
-```bash
-gcloud ai endpoints list \
-  --region=us-central1 \
-  --filter='displayName=rf-preco-imoveis-endpoint' \
-  --format='value(name)'
-
-gcloud ai models list \
-  --region=us-central1 \
-  --filter='displayName=rf-preco-imoveis' \
-  --format='value(name)'
-# em ambos, o ID numérico é o último segmento do resource name
-```
-
-**Deployar o modelo (10 a 20 min):**
-
-```bash
-gcloud ai endpoints deploy-model ENDPOINT_ID \
-  --region=us-central1 \
-  --model=MODEL_ID \
-  --display-name=rf-preco-imoveis \
-  --machine-type=n1-standard-2 \
-  --min-replica-count=1 \
-  --max-replica-count=1 \
-  --traffic-split=0=100
-```
-
-**Predizer:**
-
-```bash
-cat > request.json <<'JSON'
-{
-  "instances": [
-    [120.0, 150.0, 3, 2, 1],
-    [45.0, 55.0, 1, 1, 0]
-  ]
-}
-JSON
-
-gcloud ai endpoints predict ENDPOINT_ID \
-  --region=us-central1 \
-  --json-request=request.json
-```
-
-**Ver o que está deployado (e pegar o `deployedModelId` para o undeploy):**
-
-```bash
-gcloud ai endpoints describe ENDPOINT_ID \
-  --region=us-central1 \
-  --format='value(deployedModels[].id)'
-```
-
 ---
 
 ## 9. O teste de fechamento
@@ -242,13 +165,17 @@ rastreabilidade — experimento → versão registrada → versão servida — �
 
 ## ⚠️ Antes de fechar o notebook
 
-O endpoint que você acabou de criar continua consumindo créditos. Vá agora para
-**[`05-encerramento-custos.md`](05-encerramento-custos.md)** e rode o checklist na ordem:
+O endpoint continua consumindo créditos. Vá agora para
+**[`05-encerramento-custos.md`](05-encerramento-custos.md)** e rode o checklist nesta ordem:
 
-1. `gcloud ai endpoints undeploy-model ENDPOINT_ID --region=us-central1 --deployed-model-id=DEPLOYED_MODEL_ID`
-2. `gcloud ai endpoints delete ENDPOINT_ID --region=us-central1`
+1. undeploy do modelo no endpoint;
+2. deletar o endpoint;
 3. deletar o modelo / as versões no Registry;
 4. remover os artefatos do GCS;
 5. parar o runtime do notebook.
 
-A ordem importa: **não é possível deletar um modelo que ainda está deployado**.
+A ordem importa: **não é possível deletar um modelo que ainda está implantado**.
+
+---
+
+Equivalentes em CLI e IaC: veja [`gcloud/README.md`](gcloud/README.md) e [`terraform/README.md`](terraform/README.md).

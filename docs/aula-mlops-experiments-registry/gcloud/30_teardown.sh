@@ -24,7 +24,7 @@
 # ############################################################################
 #
 # Uso:
-#   PROJECT_ID=meu-projeto bash scripts/30_teardown.sh
+#   PROJECT_ID=meu-projeto bash gcloud/30_teardown.sh
 #
 # Variaveis de ambiente aceitas:
 #   PROJECT_ID          ID do projeto. Se ausente, usa `gcloud config get-value project`.
@@ -85,7 +85,7 @@ run() {
 }
 
 command -v gcloud >/dev/null 2>&1 || erro "gcloud nao encontrado no PATH."
-[[ -n "${PROJECT_ID}" ]] || erro "PROJECT_ID vazio. Rode: PROJECT_ID=seu-projeto bash scripts/30_teardown.sh"
+[[ -n "${PROJECT_ID}" ]] || erro "PROJECT_ID vazio. Rode: PROJECT_ID=seu-projeto bash gcloud/30_teardown.sh"
 [[ "${PROJECT_ID}" != "SEU_PROJECT_ID" ]] || erro "Troque SEU_PROJECT_ID pelo ID real do seu projeto."
 
 # Trava de seguranca: o bucket a remover jamais pode ser o compartilhado.

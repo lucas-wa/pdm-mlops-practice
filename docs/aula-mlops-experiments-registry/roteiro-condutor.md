@@ -1,6 +1,6 @@
 # Roteiro do condutor — aula ao vivo no console (~60 min)
 
-Roteiro minuto a minuto para o docente conduzir a aula **Introdução ao MLOps no GCP: Experiments + Model Registry no Vertex AI** pelo console do Google Cloud, com o notebook aberto no BigQuery Studio.
+Roteiro minuto a minuto para conduzir a aula **Introdução ao MLOps no GCP: Experiments + Model Registry no Vertex AI** pelo console, com o notebook aberto no BigQuery Studio.
 
 Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md) · [`02-treino-e-experiments.md`](02-treino-e-experiments.md) · [`03-model-registry.md`](03-model-registry.md) · [`04-deploy-endpoint.md`](04-deploy-endpoint.md) · [`05-encerramento-custos.md`](05-encerramento-custos.md)
 
@@ -12,12 +12,12 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 - [ ] **Nome real da tabela gold** confirmado e substituído no lugar de `GOLD_TABLE` no notebook.
 - [ ] Notebook [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) **executado de ponta a ponta no ensaio**, com tempo de cada célula anotado.
 - [ ] **Endpoint de referência já provisionado e respondendo** (contingência — ver seção de contingências).
-- [ ] Rótulos do console conferidos no dia (rebrand "Gemini Enterprise Agent Platform" na documentação vs. "Vertex AI" no console).
+- [ ] Rótulos do console conferidos no dia ("Gemini Enterprise Agent Platform" na documentação vs. "Vertex AI" no console).
 - [ ] Runtime do BigQuery Studio **já ligado e aquecido** — subir runtime ao vivo custa minutos que o roteiro não tem.
 - [ ] Abas do navegador pré-abertas: BigQuery Studio · Vertex AI Experiments · Model Registry · Online prediction → Endpoints · Billing → Budgets & alerts.
 - [ ] Budget do projeto já criado (acompanhamento do consumo de créditos), para mostrar na tela sem precisar configurar do zero.
 
-> **Regra de ouro do tempo.** O deploy do endpoint leva de 10 a 20 minutos e **não acelera**. O roteiro abaixo dispara o deploy assim que o modelo está registrado e usa o tempo de provisionamento para explicar Registry e Experiments. Se você esperar o deploy terminar parado, a aula não fecha em 1 hora.
+> **Regra de ouro do tempo.** O deploy leva de 10 a 20 minutos e **não acelera**. Dispare-o assim que o modelo estiver registrado e use o tempo de provisionamento para explicar Registry e Experiments. Esperando parado, a aula não fecha em 1 hora.
 
 ---
 
@@ -52,7 +52,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 | 16–19 | Run 2 variando um hiperparâmetro | Mudar **um** parâmetro — no notebook é só o `max_depth` (12 → 24), com `n_estimators=200` nos dois runs. Um só — a comparação precisa ser legível |
 | 19–20 | Comparar no console | Vertex AI → **Experiments** → `preco-imoveis-rf` → selecionar as duas runs → **Compare** |
 
-**Conceito a fixar:** o valor do Experiments não é guardar métricas — é conseguir responder "por que esta versão é melhor que aquela?" três semanas depois, sem depender da memória de ninguém.
+**Conceito a fixar:** o valor do Experiments não é guardar métricas — é responder "por que esta versão é melhor que aquela?" três semanas depois, sem depender da memória de ninguém.
 
 > **Se o treino demorar mais que o previsto:** reduza `n_estimators` na hora. O ponto pedagógico é a comparação entre runs, não a qualidade do modelo.
 
@@ -123,7 +123,7 @@ Conduzir **junto com a turma**, item a item, seguindo [`05-encerramento-custos.m
 |---|---|
 | 45–47 | **Undeploy** do modelo no endpoint, depois **deletar o endpoint**. Explicar por que esta é a ordem: não se apaga o modelo com ele implantado |
 | 47–49 | **Apagar o runtime** do notebook (BigQuery Studio / Colab Enterprise). Se alguém usou Workbench, **Stop** e **Delete** da instância |
-| 49–50 | **TensorBoard**: nesta aula **não criamos nenhuma instância porque o `aiplatform.init(...)` passa `experiment_tensorboard=False`**. Deixar claro que, **sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* sozinho** ao associar o experimento — por isso conferimos a lista mesmo assim. Há consumo de créditos por armazenamento (na ordem de US$ 10/GiB/mês — confirmar o valor no pricing ao vivo) |
+| 49–50 | **TensorBoard**: nesta aula **não criamos nenhuma instância porque o `aiplatform.init(...)` passa `experiment_tensorboard=False`**. Sem esse parâmetro, **o SDK cria uma *Default Tensorboard* sozinho** ao associar o experimento — por isso conferimos a lista mesmo assim. Consome por armazenamento (ordem de US$ 10/GiB/mês — confirmar no pricing ao vivo) |
 | 50–52 | Deletar **versões e modelo** e os **objetos no GCS da aula** (`gs://${PROJECT_ID}-mlops-aula/`) |
 | 52–54 | **Budget e alertas**: mostrar Billing → **Budgets & alerts** na tela; explicar que serve para acompanhar o consumo dos créditos e que o alerta avisa, não bloqueia |
 | 54–55 | **Varredura final**: percorrer a caixa "Confira que nada ficou ligado" do [`05-encerramento-custos.md`](05-encerramento-custos.md) |
@@ -132,7 +132,7 @@ Conduzir **junto com a turma**, item a item, seguindo [`05-encerramento-custos.m
 >
 > **NÃO apagar** o bucket compartilhado `${PROJECT_ID}-aula-pdm` nem o dataset `aula_pdm`. São infraestrutura das aulas anteriores e serão usados no Dia 2. Apagar é irreversível.
 
-> **Créditos educacionais — diga isso em voz alta.** A turma usa créditos educacionais do Google Cloud: **ninguém será cobrado no cartão**. Mas os créditos são **finitos e não voltam** — um endpoint esquecido queima saldo todo dia. O teardown é higiene de ambiente, para o saldo chegar inteiro nas próximas atividades.
+> **Créditos educacionais — diga em voz alta.** A turma usa créditos educacionais do Google Cloud: **ninguém será cobrado no cartão**. Mas os créditos são **finitos e não voltam** — um endpoint esquecido queima saldo todo dia. O teardown é higiene de ambiente.
 
 > **Checkpoint — o que os alunos devem ter na tela**
 >
@@ -154,7 +154,7 @@ Conduzir **junto com a turma**, item a item, seguindo [`05-encerramento-custos.m
 
 ## Flexibilização do tempo
 
-Este roteiro cabe em **60 minutos** quando o ensaio foi feito e o deploy é antecipado. Na prática:
+Cabe em **60 minutos** quando o ensaio foi feito e o deploy é antecipado. Na prática:
 
 | Cenário | Duração | Ajuste |
 |---|---|---|
@@ -163,7 +163,7 @@ Este roteiro cabe em **60 minutos** quando o ensaio foi feito e o deploy é ante
 | ***Fallback* rápido — sem deploy** | ~40 min | Percorrer treino → Experiments → Registry. Demonstrar a predição no **endpoint de referência** em 3 minutos e ir para o encerramento |
 | **Turma travada no ambiente** | variável | Usar o projeto do docente como referência única na tela; alunos acompanham sem executar, e a prática vira tarefa assistida |
 
-**O que nunca cortar:** o bloco **45–55 (encerramento e consumo de créditos)**. É o único bloco cuja ausência deixa recursos ligados queimando os créditos da disciplina. Se o tempo apertar, corte a segunda versão do modelo, corte a segunda run, corte a predição ao vivo — o teardown fica.
+**O que nunca cortar:** o bloco **45–55 (encerramento e consumo de créditos)** — é o único cuja ausência deixa recursos ligados queimando os créditos da disciplina. Corte a segunda versão, a segunda run, a predição ao vivo — o teardown fica.
 
 **O que cortar primeiro, nesta ordem:**
 

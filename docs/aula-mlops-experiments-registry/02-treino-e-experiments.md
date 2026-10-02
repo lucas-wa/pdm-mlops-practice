@@ -1,6 +1,6 @@
 # 02 — Treino e rastreamento de experimentos
 
-Este documento acompanha as **seções 1 a 5** do notebook
+Acompanha as **seções 1 a 5** do notebook
 [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb). O notebook
 é o que roda na aula; aqui ficam a explicação de cada passo e o caminho pelo console.
 
@@ -14,16 +14,15 @@ Este documento acompanha as **seções 1 a 5** do notebook
 | Alvo | `preco` |
 | Features (ordem canônica) | `[area_util, area_total, quartos, banheiros, garagens]` |
 
-> **Experiments só existe em SDK e console.** Não há comando `gcloud` para criar experimentos ou runs,
-> e não há recurso Terraform para eles (o único recurso Vertex AI correlato é
-> `google_vertex_ai_tensorboard`, que **não usamos** — ele é pago por armazenamento). Por isso este
-> documento tem dois blocos por passo, não três.
+> **Experiments só existe em SDK e console.** Não há comando `gcloud` nem recurso Terraform para
+> experimentos e runs. O único recurso Vertex AI correlato é `google_vertex_ai_tensorboard`, que **não
+> usamos** — é pago por armazenamento.
 
 > **Atenção ao TensorBoard automático.** Ao associar um experimento com
-> `aiplatform.init(..., experiment=...)`, o SDK **cria sozinho** uma instância *Default Tensorboard* no
-> projeto — e ela é tarifada por armazenamento. Nesta aula isso **não acontece porque passamos
-> `experiment_tensorboard=False`** (veja o bloco da seção 5). Sem esse parâmetro, a instância aparece; é
-> por isso que o `scripts/30_teardown.sh` verifica a lista de TensorBoards no encerramento.
+> `aiplatform.init(..., experiment=...)`, o SDK **cria sozinho** uma instância *Default Tensorboard*,
+> tarifada por armazenamento. Nesta aula isso **não acontece porque passamos
+> `experiment_tensorboard=False`** (seção 5). Por isso o [`gcloud/30_teardown.sh`](gcloud/30_teardown.sh)
+> verifica a lista de TensorBoards no encerramento.
 
 ---
 
@@ -45,26 +44,25 @@ WHERE preco IS NOT NULL AND preco > 0
 df = cliente_bq.query(sql).to_dataframe()
 ```
 
-**Dependência escondida**: `to_dataframe()` precisa do pacote `db-dtypes` para converter as colunas de
+**Dependência escondida**: `to_dataframe()` precisa do pacote `db-dtypes` para converter colunas de
 data/hora do BigQuery. Ele está no `%pip install` da seção 0 do notebook.
 
-**Antes da aula**, confirme o nome exato da tabela e das colunas. O esquema da gold não é fixo — cada
-turma construiu o seu. O que muda no notebook é só a variável `GOLD_TABLE` e, se necessário, a lista
-`COLUNAS_FEATURES`.
+**Antes da aula**, confirme o nome exato da tabela e das colunas — o esquema da gold não é fixo. No
+notebook muda só a variável `GOLD_TABLE` e, se necessário, a lista `COLUNAS_FEATURES`.
 
 ---
 
 ## 2. Deduplicar e dividir treino / validação / teste
 
-Duas regras que decidem se o número que você vai reportar significa alguma coisa.
+Duas regras que decidem se o número reportado significa alguma coisa.
 
-**Deduplicar por imóvel, antes de dividir.** As tabelas da aula são append-only: o mesmo anúncio pode
-ter entrado duas vezes. Se uma cópia cai no treino e outra na validação, o modelo é avaliado num imóvel
-que já viu e o MAE fica artificialmente bom.
+**Deduplicar por imóvel, antes de dividir.** As tabelas são append-only: o mesmo anúncio pode ter
+entrado duas vezes. Se uma cópia cai no treino e outra na validação, o modelo é avaliado num imóvel que
+já viu e o MAE fica artificialmente bom.
 
 **Excluir colunas que vazam o alvo.** Qualquer coluna derivada do preço — `preco_fmt`, `preco_por_m2`,
-faixa de preço, valor do IPTU calculado sobre o anúncio — entrega a resposta ao modelo. A defesa aqui é
-estrutural: a lista `COLUNAS_FEATURES` é explícita e nada entra sem passar por ela.
+faixa de preço — entrega a resposta ao modelo. A defesa é estrutural: `COLUNAS_FEATURES` é explícita e
+nada entra sem passar por ela.
 
 ```python
 df_unico = df.drop_duplicates(subset=["id"], keep="last").reset_index(drop=True)
@@ -76,24 +74,22 @@ X_treino, X_resto, y_treino, y_resto = train_test_split(X, y, test_size=0.30, ra
 X_val, X_teste, y_val, y_teste = train_test_split(X_resto, y_resto, test_size=0.50, random_state=42)
 ```
 
-O `random_state=42` não é superstição: é o que garante que a sala inteira chegue no mesmo split e
-compare os mesmos números.
+O `random_state=42` garante que a sala inteira chegue no mesmo split e compare os mesmos números.
 
 ---
 
 ## 3. Baseline: a mediana do preço de treino
 
-Antes de treinar, estabeleça a régua. O baseline é chutar sempre a **mediana do preço de treino** e
-medir o **MAE** (erro absoluto médio) na validação.
+Antes de treinar, a régua: chutar sempre a **mediana do preço de treino** e medir o **MAE** (erro
+absoluto médio) na validação.
 
 ```python
 mediana_treino = float(y_treino.median())
 mae_baseline = float(mean_absolute_error(y_val, np.full(len(y_val), mediana_treino)))
 ```
 
-O MAE é a métrica da aula porque se explica em uma frase: *em média, o modelo erra R$ X por anúncio*.
-E um modelo que não bate a mediana não tem motivo para existir — esse é o teste de sanidade que a
-maioria dos projetos pula.
+O MAE se explica em uma frase: *em média, o modelo erra R$ X por anúncio*. E um modelo que não bate a
+mediana não tem motivo para existir — o teste de sanidade que a maioria dos projetos pula.
 
 ---
 
@@ -110,11 +106,11 @@ def construir_pipeline(n_estimators=200, max_depth=12, random_state=42):
     ])
 ```
 
-`n_jobs=-1` abre um processo por núcleo, e cada processo carrega sua própria cópia das árvores. Num
-runtime modesto (o padrão do BigQuery Studio / Colab Enterprise) isso vira `MemoryError` no meio do
-treino. `n_jobs=2` paraleliza o suficiente e mantém o consumo previsível.
+`n_jobs=-1` abre um processo por núcleo, cada um com sua cópia das árvores — num runtime modesto (o
+padrão do BigQuery Studio) isso vira `MemoryError` no meio do treino. `n_jobs=2` paraleliza o
+suficiente e mantém o consumo previsível.
 
-O pipeline é deliberadamente pequeno, e a razão é de **serving**, não de modelagem:
+O pipeline é deliberadamente pequeno, por razões de **serving**, não de modelagem:
 
 - o container pré-construído entrega as `instances` ao `predict` como **array posicional** — sem nomes de
   coluna. Qualquer transformação que dependa de nome quebra;
@@ -135,8 +131,8 @@ modelo registrado e deployado é o numérico.
 
 ## 5. Rastrear os treinos no Vertex AI Experiments
 
-Sem rastreamento, o resultado do treino vive na saída de uma célula e morre quando o notebook fecha.
-O Experiments transforma cada treino num **run** com parâmetros e métricas, guardado no projeto.
+Sem rastreamento, o resultado do treino morre quando o notebook fecha. O Experiments transforma cada
+treino num **run** com parâmetros e métricas, guardado no projeto.
 
 ### SDK (o que roda na aula)
 
@@ -170,23 +166,18 @@ Depois de dois runs, a tabela comparativa sai em uma linha:
 aiplatform.get_experiment_df("preco-imoveis-rf")
 ```
 
-O notebook roda **dois runs variando somente `max_depth`** — run A com `max_depth=12` e run B com
-`max_depth=24`, ambos com `n_estimators=200`. Mudar um parâmetro de cada vez é o que torna a comparação
-legível; e manter 200 árvores nos dois é o que mantém o treino dentro da memória do runtime.
+O notebook roda **dois runs variando somente `max_depth`** — run A com `12`, run B com `24`, ambos com
+`n_estimators=200`. Mudar um parâmetro por vez torna a comparação legível; manter 200 árvores nos dois
+mantém o treino dentro da memória do runtime.
 
-Detalhes que valem a pena:
-
-- **`log_metrics` são métricas-resumo e não exigem TensorBoard** — ou seja, praticamente sem custo.
-  Evitamos de propósito `log_time_series_metrics`, que exigiria uma instância de TensorBoard **paga por
-  armazenamento**;
+- **`log_metrics` são métricas-resumo e não exigem TensorBoard** — praticamente sem custo. Evitamos de
+  propósito `log_time_series_metrics`, que exigiria uma instância **paga por armazenamento**;
 - **não criamos TensorBoard porque passamos `experiment_tensorboard=False`.** Sem esse parâmetro, o SDK
-  provisiona sozinho uma instância *Default Tensorboard* ao associar o experimento — mesmo que você só
-  use métricas-resumo. Com ele, `log_params` e `log_metrics` continuam funcionando normalmente e nada é
-  criado;
-- o nome do run precisa ser único dentro do experimento. O notebook carimba a hora no nome
+  provisiona uma *Default Tensorboard* sozinho ao associar o experimento, mesmo com métricas-resumo;
+- o nome do run precisa ser único dentro do experimento — o notebook carimba a hora
   (`run-a-%Y%m%d-%H%M%S`) para que reexecuções não colidam;
-- os valores de `log_params` e `log_metrics` são escalares (texto, número, booleano). Listas viram texto
-  — por isso `",".join(COLUNAS_FEATURES)`.
+- `log_params` e `log_metrics` aceitam escalares. Listas viram texto — daí o
+  `",".join(COLUNAS_FEATURES)`.
 
 ### Console (Vertex AI → Experiments)
 
@@ -195,19 +186,12 @@ Detalhes que valem a pena:
 3. Confirme a região **us-central1** no seletor no topo da lista.
 4. Clique no experimento **`preco-imoveis-rf`**. A lista de runs aparece com as colunas de parâmetros e
    métricas registradas.
-5. **Comparar dois runs**: marque as caixas de seleção dos runs `run-a-...` e `run-b-...` e clique em
-   **Compare**. A tela mostra parâmetros e métricas lado a lado — é o mesmo conteúdo do
-   `get_experiment_df()`, num formato que quem não abriu o notebook consegue ler.
-6. Clicando em um run individual você vê a aba de *Parameters* e *Metrics* daquele run.
+5. **Comparar dois runs**: marque as caixas de `run-a-...` e `run-b-...` e clique em **Compare**. A tela
+   mostra parâmetros e métricas lado a lado — o mesmo conteúdo do `get_experiment_df()`, num formato
+   que quem não abriu o notebook consegue ler.
+6. Clicando em um run individual, as abas *Parameters* e *Metrics* daquele run.
 
-> Se a lista aparecer vazia logo depois de rodar as células, atualize a página: o registro é assíncrono e
-> leva alguns segundos para aparecer.
-
-### gcloud e Terraform
-
-**Não existem.** Vertex AI Experiments não tem superfície em `gcloud ai ...` nem recurso no provider
-`hashicorp/google`. Quem precisa automatizar o rastreamento usa o SDK Python dentro do job de treino —
-que é exatamente o que este notebook faz.
+> Se a lista aparecer vazia logo depois de rodar as células, atualize a página: o registro é assíncrono.
 
 ---
 
@@ -216,3 +200,8 @@ que é exatamente o que este notebook faz.
 Ao final da seção 5 o notebook escolhe o run de menor MAE e avalia no **conjunto de teste** — a
 estimativa honesta, em dados que nenhuma decisão de modelagem viu. É esse pipeline que segue para
 [`03-model-registry.md`](03-model-registry.md).
+
+---
+
+Equivalentes em CLI e IaC: veja [`gcloud/README.md`](gcloud/README.md) e [`terraform/README.md`](terraform/README.md)
+— mas note que **Experiments não tem equivalente**: é SDK ou console.

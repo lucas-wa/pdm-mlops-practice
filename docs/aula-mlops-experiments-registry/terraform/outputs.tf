@@ -44,6 +44,6 @@ output "proximos_passos" {
     "Experiment 'preco-imoveis-rf': criado pelo SDK em aiplatform.init(experiment=...).",
     "Modelo 'rf-preco-imoveis': registrado por aiplatform.Model.upload / gcloud ai models upload.",
     "Endpoint 'rf-preco-imoveis-endpoint': criado e alimentado por SDK / gcloud ai endpoints deploy-model.",
-    "Encerramento: bash ../scripts/30_teardown.sh (NAO use terraform destroy).",
+    "Encerramento: bash ../gcloud/30_teardown.sh (NAO use terraform destroy).",
   ])
 }

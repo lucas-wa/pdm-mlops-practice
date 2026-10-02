@@ -1,6 +1,6 @@
 # 00 — Pré-requisitos e camada gold
 
-Este documento é a preparação **anterior à aula**. Ele cobre duas coisas: o **checklist de ambiente** (o que precisa estar pronto no GCP) e o **contrato de dados** (o que exatamente será lido da gold, o que é alvo, o que é feature e o que precisa ser excluído).
+Preparação **anterior à aula**: o **checklist de ambiente** (o que precisa estar pronto no GCP) e o **contrato de dados** (alvo, features, exclusões).
 
 > **Antes de qualquer coisa:** leia o [`README.md`](README.md) e o aviso de consumo de créditos. O encerramento em [`05-encerramento-custos.md`](05-encerramento-custos.md) é parte obrigatória da atividade.
 
@@ -19,7 +19,7 @@ Este documento é a preparação **anterior à aula**. Ele cobre duas coisas: o 
 
 - [ ] Você é **`Owner`** do seu próprio projeto (`roles/owner`), então **já tem todas as permissões necessárias — não precisa conceder nada**.
 
-A tabela abaixo é **apenas referência para o cenário de projeto compartilhado** (ou de uma conta de serviço dedicada), onde não existe `roles/owner` e os papéis mínimos precisam ser concedidos um a um:
+A tabela abaixo é **referência apenas para projeto compartilhado** (ou service account dedicada), onde os papéis mínimos precisam ser concedidos um a um:
 
 | Papel | Para quê |
 |---|---|
@@ -28,7 +28,7 @@ A tabela abaixo é **apenas referência para o cenário de projeto compartilhado
 | `roles/bigquery.dataViewer` | Ler a tabela gold |
 | `roles/bigquery.jobUser` | Executar as consultas |
 
-Os comandos de concessão desse cenário estão em [`01-setup-gcp.md`](01-setup-gcp.md) e em [`scripts/00_setup.sh`](scripts/00_setup.sh).
+Os comandos de concessão desse cenário estão em [`gcloud/README.md`](gcloud/README.md) e em [`gcloud/00_setup.sh`](gcloud/00_setup.sh).
 
 ### 1.3 APIs habilitadas
 
@@ -45,7 +45,7 @@ Passo a passo em [`01-setup-gcp.md`](01-setup-gcp.md).
 - [ ] Bucket da aula **`${PROJECT_ID}-mlops-aula`** criado em `us-central1`.
 - [ ] Bucket compartilhado **`${PROJECT_ID}-aula-pdm`** preservado — **não mexer**, é infraestrutura das aulas anteriores.
 
-> **Região.** Dataset, bucket, experimento, modelo e endpoint devem estar todos em **`us-central1`**. Recursos do Vertex AI não leem datasets do BigQuery de outra região sem cópia intermediária.
+> **Região.** Dataset, bucket, experimento, modelo e endpoint, todos em **`us-central1`**. O Vertex AI não lê datasets do BigQuery de outra região sem cópia intermediária.
 
 ### 1.5 Ambiente de execução
 
@@ -67,7 +67,7 @@ Itens sensíveis a versão e a mudanças de interface:
 
 ## 2. Contrato de dados
 
-O contrato abaixo vale para o notebook, para o modelo registrado e para o payload do endpoint. Ele vem do planejamento da disciplina (`docs/planejamento-aulas-mlops-gcp.md`) e não deve ser alterado durante a aula.
+Vale para o notebook, o modelo registrado e o payload do endpoint. Vem do planejamento da disciplina (`docs/planejamento-aulas-mlops-gcp.md`) e **não deve ser alterado durante a aula**.
 
 | Item | Definição |
 |---|---|
@@ -86,16 +86,16 @@ O contrato abaixo vale para o notebook, para o modelo registrado e para o payloa
 
 Esta distinção é a fonte mais comum de erro no dia da aula.
 
-- **No notebook (treino)**, as features candidatas podem incluir as categóricas `bairro` e `cidade`, dependendo do que a gold oferecer. Elas entram no `Pipeline` com codificação ajustada **apenas no treino**.
+- **No notebook (treino)**, as features candidatas podem incluir as categóricas `bairro` e `cidade`, conforme a gold oferecer. Elas entram no `Pipeline` com codificação ajustada **apenas no treino**.
 - **No modelo DEPLOYADO no endpoint**, usamos **somente as 5 features numéricas**, nesta **ordem canônica**:
 
 ```
 [area_util, area_total, quartos, banheiros, garagens]
 ```
 
-> **Por que só as 5 numéricas no serving.** O container pré-construído de scikit-learn entrega as `instances` ao `predict` como **array posicional**, não como DataFrame com nomes de coluna. Restringir o modelo implantado às features numéricas, numa ordem fixa e documentada, elimina o atrito de casar nomes e ordem no payload. As categóricas continuam disponíveis para exploração no notebook — só não fazem parte do contrato do endpoint.
+> **Por que só as 5 numéricas no serving.** O container pré-construído entrega as `instances` ao `predict` como **array posicional**, não como DataFrame com nomes de coluna. Uma ordem fixa e documentada elimina o atrito de casar nomes e ordem no payload. As categóricas seguem disponíveis para exploração no notebook — só não fazem parte do contrato do endpoint.
 
-**Ordem é contrato.** Todo payload enviado ao `/predict` precisa respeitar exatamente a sequência acima. Trocar `area_util` por `area_total` na posição não gera erro — gera uma predição silenciosamente errada.
+**Ordem é contrato.** Trocar `area_util` por `area_total` na posição não gera erro — gera uma predição silenciosamente errada.
 
 Exemplo de payload (detalhes em [`04-deploy-endpoint.md`](04-deploy-endpoint.md)):
 
@@ -122,27 +122,33 @@ Excluir do conjunto de features **qualquer coluna derivada do alvo ou que o reve
 
 ### 2.3 Deduplicação e separação dos dados
 
-1. **Deduplicar por imóvel** antes de qualquer separação. A gold pode conter o mesmo imóvel anunciado mais de uma vez (reanúncios, atualizações de preço, múltiplas fontes).
-2. Se houver **múltiplas observações do mesmo imóvel**, todas devem ficar **no mesmo conjunto** (treino, validação ou teste). Espalhar o mesmo imóvel entre treino e teste infla a métrica: o modelo "acerta" porque já viu aquele imóvel.
-3. A separação deve ser **reprodutível** (semente fixa e critério explícito), para que duas execuções do notebook comparem a mesma coisa.
-4. Definir uma **chave de imóvel** antes da aula: identificador próprio da gold ou, na falta dele, uma combinação estável de atributos (por exemplo, endereço normalizado + área). Registrar a escolha.
+1. **Deduplicar por imóvel** antes de qualquer separação. A gold pode conter o mesmo imóvel mais de uma vez (reanúncios, atualizações de preço, múltiplas fontes).
+2. **Múltiplas observações do mesmo imóvel ficam no mesmo conjunto** (treino, validação ou teste). Espalhá-las entre treino e teste infla a métrica: o modelo "acerta" porque já viu aquele imóvel.
+3. A separação deve ser **reprodutível** (semente fixa e critério explícito), para que duas execuções comparem a mesma coisa.
+4. Definir a **chave de imóvel** antes da aula: identificador próprio da gold ou, na falta dele, uma combinação estável de atributos (endereço normalizado + área, por exemplo). Registrar a escolha.
 
 ### 2.4 Pré-processamento
 
-- **Imputação e codificação são ajustadas somente no conjunto de treino** e aplicadas aos demais. Ajustar no dataset inteiro vaza informação da validação e do teste para o modelo.
-- As transformações são salvas **junto com o modelo**, dentro do mesmo `Pipeline` do scikit-learn. O artefato registrado no Registry precisa ser autossuficiente: recebe features cruas e devolve predição.
+- **Imputação e codificação são ajustadas somente no treino** e aplicadas aos demais. Ajustar no dataset inteiro vaza informação da validação e do teste.
+- As transformações são salvas **junto com o modelo**, no mesmo `Pipeline`. O artefato registrado precisa ser autossuficiente: recebe features cruas e devolve predição.
 
 ### 2.5 Baseline
 
-O baseline é uma **previsão constante igual à mediana do `preco` do conjunto de treino**, avaliada na mesma validação e com a mesma métrica (MAE).
+Uma **previsão constante igual à mediana do `preco` do conjunto de treino**, avaliada na mesma validação e com a mesma métrica (MAE).
 
-Ele existe para responder a uma pergunta única e direta: **o modelo aprendeu alguma coisa?** Se o MAE do RandomForest não for menor que o MAE do baseline, o modelo não justifica sua própria existência — e esse é um resultado legítimo de discutir em aula, não um erro a esconder. Ambos os valores são registrados no Experiments como `mae` e `mae_baseline`, lado a lado, em cada run.
+Ele responde a uma pergunta única: **o modelo aprendeu alguma coisa?** Se o MAE do RandomForest não for menor que o do baseline, o modelo não justifica sua existência — resultado legítimo de discutir em aula, não erro a esconder. Ambos vão para o Experiments como `mae` e `mae_baseline`, em cada run.
 
 ---
 
 ## 3. Como confirmar o schema da gold
 
-A tabela gold não tem schema fixo. **Confirme antes da aula** o nome exato e as colunas disponíveis, e substitua o placeholder `GOLD_TABLE` no notebook.
+A gold não tem schema fixo — cada turma construiu a sua. **Confirme antes da aula** o nome exato e as colunas, e substitua o placeholder `GOLD_TABLE` no notebook.
+
+> ### Não tem a gold, ou está mal formatada? Rode no Cloud Shell: `bash gcloud/seed_gold.sh`
+>
+> O script [`gcloud/seed_gold.sh`](gcloud/seed_gold.sh) **valida** a gold (colunas do contrato e volume mínimo) e, só se ela estiver faltando ou inválida, **reconstrói** a partir da amostra de anúncios do repositório das aulas anteriores: cria o dataset se preciso, carrega a Bronze `anuncios` e materializa `aula_pdm.imoveis_gold` com dedup e filtros de sanidade.
+>
+> Rodar com a gold boa não muda nada. Use `bash gcloud/seed_gold.sh --force` para reconstruir mesmo assim. Ele escreve apenas em `aula_pdm` — não toca em buckets nem em recursos de outras aulas.
 
 ### 3.1 Pelo console (caminho da aula)
 
@@ -174,7 +180,7 @@ bq show --project_id=SEU_PROJECT_ID --format=prettyjson SEU_PROJECT_ID:aula_pdm.
 
 ### 3.3 Consultas de sanidade
 
-Rode estas três antes da aula. Elas revelam os problemas que estragam o treino ao vivo.
+Rode estas três antes da aula — elas revelam os problemas que estragam o treino ao vivo.
 
 **Volume e cobertura do alvo:**
 

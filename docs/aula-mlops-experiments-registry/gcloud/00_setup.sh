@@ -15,10 +15,10 @@
 # projeto compartilhado ou com uma service account dedicada (menor privilegio).
 #
 # Uso:
-#   PROJECT_ID=meu-projeto bash scripts/00_setup.sh
+#   PROJECT_ID=meu-projeto bash gcloud/00_setup.sh
 #
 #   # aluno Owner do proprio projeto (recomendado nesta disciplina):
-#   PROJECT_ID=meu-projeto GRANT_IAM=false bash scripts/00_setup.sh
+#   PROJECT_ID=meu-projeto GRANT_IAM=false bash gcloud/00_setup.sh
 #
 # Variaveis de ambiente aceitas (todas opcionais, exceto PROJECT_ID):
 #   PROJECT_ID     ID do projeto. Se ausente, usa `gcloud config get-value project`.
@@ -73,7 +73,7 @@ erro()  { printf '  ERRO %s\n' "$*" >&2; exit 1; }
 command -v gcloud >/dev/null 2>&1 || erro "gcloud nao encontrado no PATH. Instale o Google Cloud SDK."
 command -v bq     >/dev/null 2>&1 || erro "bq nao encontrado no PATH. Ele vem junto com o Google Cloud SDK."
 
-[[ -n "${PROJECT_ID}" ]] || erro "PROJECT_ID vazio. Rode: PROJECT_ID=seu-projeto bash scripts/00_setup.sh"
+[[ -n "${PROJECT_ID}" ]] || erro "PROJECT_ID vazio. Rode: PROJECT_ID=seu-projeto bash gcloud/00_setup.sh"
 [[ "${PROJECT_ID}" != "SEU_PROJECT_ID" ]] || erro "Troque SEU_PROJECT_ID pelo ID real do seu projeto."
 
 info "Configuracao"
@@ -193,6 +193,6 @@ cat <<EOF
   Endpoint ............ rf-preco-imoveis-endpoint (criado no passo de deploy)
 
   Proximo passo: abrir o notebook da aula no BigQuery Studio.
-  Ao terminar, rode \`bash scripts/30_teardown.sh\` para nao deixar o endpoint
+  Ao terminar, rode \`bash gcloud/30_teardown.sh\` para nao deixar o endpoint
   consumindo creditos por node-hora 24/7, mesmo sem trafego.
 EOF
