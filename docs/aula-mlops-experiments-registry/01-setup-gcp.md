@@ -90,6 +90,8 @@ Conceder em **IAM & Admin > IAM > Grant access**: principal (usuário ou service
 **Se não existe ou está mal formatada** — no **Cloud Shell**:
 
 ```bash
+git clone https://github.com/lucas-wa/pdm-mlops-practice.git
+cd pdm-mlops-practice/docs/aula-mlops-experiments-registry
 bash gcloud/seed_gold.sh
 ```
 
