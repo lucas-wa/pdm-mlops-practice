@@ -36,3 +36,6 @@ model.joblib
 Thumbs.db
 .vscode/
 .idea/
+
+# Export de notebook baixado para comparacao (nao versionar)
+/treino_experiments_registry.py
