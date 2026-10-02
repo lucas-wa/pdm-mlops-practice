@@ -13,7 +13,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 - [ ] Notebook [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) **executado de ponta a ponta no ensaio**, com o tempo de cada célula anotado.
 - [ ] **Endpoint de referência provisionado e respondendo** (contingência).
 - [ ] Rótulos do console conferidos no dia ("Gemini Enterprise Agent Platform" na documentação vs. "Vertex AI" no console).
-- [ ] Runtime do BigQuery Studio **ligado e aquecido** — subir runtime ao vivo custa minutos que o roteiro não tem.
+- [ ] Runtime do BigQuery Studio **ligado e aquecido** — subir runtime ao vivo custa minutos que o roteiro não tem. Se o runtime não criar por quota de SSD, ver "Se falhar com `Quota 'SSD_TOTAL_GB' exceeded`" no Passo 6 de [`01-setup-gcp.md`](01-setup-gcp.md).
 - [ ] Abas pré-abertas: BigQuery Studio · Vertex AI Experiments · Model Registry · Online prediction → Endpoints · Billing → Budgets & alerts.
 - [ ] Budget do projeto já criado (acompanhamento do consumo de créditos), para mostrar na tela sem configurar do zero.
 

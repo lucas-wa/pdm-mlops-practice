@@ -127,6 +127,19 @@ O notebook da aula roda no **BigQuery Studio**, em `us-central1`.
 
 **Conectar o runtime:** clique em **Connect** — usa o runtime padrão e pode levar alguns minutos. Para escolher outro: dropdown ao lado de **Connect** → **Connect to a runtime** → runtime existente ou **Create new runtime**.
 
+### Se falhar com `Quota 'SSD_TOTAL_GB' exceeded`
+
+> `Falha ao criar o ambiente de execução. Quota 'SSD_TOTAL_GB' exceeded. Limit: 250.0 in region us-central1.`
+
+Cada runtime do Colab Enterprise reserva **~200+ GiB** de SSD do Compute Engine (100 GiB de boot + 100 GiB fixo + o disco de dados do template), e o limite padrão é **250 GiB por região** — ou seja, **não cabem dois runtimes no mesmo projeto**. Soluções, nesta ordem:
+
+1. **Apague runtimes ociosos** — libera a quota na hora. **Vertex AI > Colab Enterprise > Runtimes**, selecione o(s) que não estão em uso → **Delete**, depois reconecte. Em CLI: `gcloud colab runtimes list --region=us-central1` e `gcloud colab runtimes delete RUNTIME_ID --region=us-central1`. Em projeto compartilhado, combine antes de apagar o runtime de outra pessoa.
+2. **Recomendado para a turma: cada aluno no próprio projeto** (onde é `Owner`) — assim ninguém divide os 250 GiB.
+3. **Peça aumento da quota** `SSD_TOTAL_GB` em `us-central1`: **IAM & Admin > Quotas & System Limits**, filtre por `SSD_TOTAL_GB`, selecione a região → **Edit quota / Request increase**.
+4. **Reduza o disco do runtime** com um template customizado: **Colab Enterprise > Runtime templates > Create**, diminua o disco de dados, e use em **Connect > Create new runtime**. Ajuda a caber **um** runtime na quota; não resolve dois no mesmo projeto, porque boot + disco fixo já somam 200 GiB.
+
+Quotas do Colab Enterprise: <https://docs.cloud.google.com/colab/docs/quotas>
+
 **Executar:** rode as células uma a uma (código e SQL), na ordem. Explicação em [`02-treino-e-experiments.md`](02-treino-e-experiments.md).
 
 - **IAM**: `roles/owner` (cada aluno é Owner) já cobre tudo. Em projeto compartilhado, os papéis são `roles/bigquery.studioUser`, `roles/bigquery.jobUser`, `roles/bigquery.readSessionUser`, `roles/aiplatform.notebookRuntimeUser` e `roles/dataform.codeEditor`.
