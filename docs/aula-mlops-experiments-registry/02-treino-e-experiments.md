@@ -65,7 +65,7 @@ X_treino, X_resto, y_treino, y_resto = train_test_split(X, y, test_size=0.30, ra
 X_val, X_teste, y_val, y_teste = train_test_split(X_resto, y_resto, test_size=0.50, random_state=42)
 ```
 
-O `random_state=42` garante que a sala inteira chegue no mesmo split.
+O `random_state=42` só reproduz o mesmo split se a **ordem das linhas for a mesma** para todos — por isso a consulta da seção 1 termina com `ORDER BY id`. Sem essa ordenação, o BigQuery devolve as linhas em ordem arbitrária, cada aluno cai num split diferente e o **MAE do baseline sai diferente**, mesmo com os mesmos dados.
 
 ---
 
