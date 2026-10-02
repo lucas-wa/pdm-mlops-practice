@@ -2,8 +2,7 @@
 
 Equivalente em `gcloud` do tutorial do console. A aula ao vivo usa o console; isto é **autoestudo**.
 
-Os scripts deste diretório executam os mesmos comandos de forma idempotente. Rode-os a partir da raiz
-do material (`docs/aula-mlops-experiments-registry/`):
+Os scripts são idempotentes. Rode-os a partir da raiz do material (`docs/aula-mlops-experiments-registry/`):
 
 | Script | O que faz |
 |---|---|
@@ -40,9 +39,8 @@ do material (`docs/aula-mlops-experiments-registry/`):
 
 Console equivalente: [`../01-setup-gcp.md`](../01-setup-gcp.md).
 
-**Antes de tudo, garanta os dados.** Sem a camada gold o notebook não roda. O [`seed_gold.sh`](seed_gold.sh)
-valida a gold e só reconstrói se ela estiver faltando ou sem as colunas do contrato — rodar com a gold boa
-não muda nada:
+**Antes de tudo, garanta os dados.** O [`seed_gold.sh`](seed_gold.sh) valida a gold e só reconstrói se ela
+estiver faltando ou sem as colunas do contrato:
 
 ```bash
 # no Cloud Shell do seu projeto
@@ -52,7 +50,7 @@ bash gcloud/seed_gold.sh
 bash gcloud/seed_gold.sh --force
 ```
 
-Ele escreve apenas em `aula_pdm` (tabelas `anuncios` e `imoveis_gold`). Detalhes do contrato de dados em
+Ele escreve apenas em `aula_pdm` (tabelas `anuncios` e `imoveis_gold`). Contrato de dados em
 [`../00-pre-requisitos-e-gold.md`](../00-pre-requisitos-e-gold.md).
 
 Tudo de uma vez:

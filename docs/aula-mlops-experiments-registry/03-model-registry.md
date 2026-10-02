@@ -23,12 +23,10 @@ Cobre as **seções 6 e 7** do notebook
 
 Duas regras que custam meia hora de depuração quando ignoradas:
 
-1. o arquivo **precisa se chamar exatamente `model.joblib`**. Não `modelo.joblib`, não `model.pkl` — é o
-   nome que o container pré-construído do scikit-learn procura ao subir;
+1. o arquivo **precisa se chamar exatamente `model.joblib`** — é o nome que o container pré-construído
+   do scikit-learn procura ao subir;
 2. o `artifact_uri` do registro aponta para o **diretório** (`gs://.../models/rf/`), **nunca** para o
    arquivo.
-
-O notebook faz o upload:
 
 ```python
 import joblib
@@ -42,11 +40,11 @@ storage.Client(project=PROJECT_ID) \
     .upload_from_filename("model.joblib")
 ```
 
-Confira o resultado em **Cloud Storage > Buckets > `SEU_PROJECT_ID-mlops-aula` > `models/rf/`**.
+Confira em **Cloud Storage > Buckets > `SEU_PROJECT_ID-mlops-aula` > `models/rf/`**.
 
-**Compatibilidade de versão**: o pipeline é treinado com `scikit-learn==1.6.*` porque o container é o
-`sklearn-cpu.1-6`. Um pickle de outra minor version pode falhar ao carregar no serving — e o erro só
-aparece no deploy, 15 minutos depois.
+**Compatibilidade de versão**: treine com `scikit-learn==1.6.*`, que é o container `sklearn-cpu.1-6`. Um
+pickle de outra minor version falha ao carregar no serving — e o erro só aparece no deploy, 15 minutos
+depois.
 
 ---
 
@@ -54,28 +52,26 @@ aparece no deploy, 15 minutos depois.
 
 ### 7.1. Console — Vertex AI → Model Registry → Import
 
-1. Console → menu de navegação → **Vertex AI**.
-2. Menu lateral, *Deploy and use* → **Model Registry**. Confirme a região **us-central1**.
-3. **Import**, no topo da lista.
-4. **Name and region**:
+1. Menu de navegação → **Vertex AI** → *Deploy and use* → **Model Registry**. Confirme **us-central1**.
+2. **Import**, no topo da lista.
+3. **Name and region**:
    - *Import as new model* para a **v1**, com o nome **`rf-preco-imoveis`**;
    - *Import as new version of an existing model* para a **v2**, selecionando o `rf-preco-imoveis`
-     existente (é o equivalente do `parent_model` no SDK);
+     existente (equivalente ao `parent_model` do SDK);
    - Região: **us-central1**.
-5. **Model settings** → *Import model artifacts into a new pre-built container*:
+4. **Model settings** → *Import model artifacts into a new pre-built container*:
    - **Model framework**: `scikit-learn`;
    - **Model framework version**: `1.6`;
    - **Accelerator type**: nenhum (CPU);
    - **Model artifact location**: `gs://SEU_PROJECT_ID-mlops-aula/models/rf/` — o **diretório**, com
      barra no final.
-6. **Explainability** e demais seções: em branco (fora do escopo).
-7. **Import**. Leva alguns segundos — não confunda com o deploy, que é o passo 04 e leva de 10 a 20
-   minutos.
-8. Na tela do modelo, **Version details** mostra a versão criada. Para promover uma versão a padrão:
-   lista de versões → selecionar → **Set as default version**.
+5. **Explainability** e demais seções: em branco (fora do escopo).
+6. **Import**. Leva segundos — não confunda com o deploy (passo 04), que leva de 10 a 20 minutos.
+7. Em **Version details**, a versão criada. Para promover: lista de versões → selecionar →
+   **Set as default version**.
 
-> O console preenche o `serving_container_image_uri` sozinho a partir do framework e da versão
-> escolhidos — é o mesmo `us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-6:latest`.
+> O console preenche o `serving_container_image_uri` sozinho a partir do framework e da versão — é o
+> mesmo `us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-6:latest`.
 
 ### 7.2. SDK Python (o que roda no notebook)
 
@@ -117,12 +113,11 @@ print(modelo_v2.version_id)         # 2
 print(modelo_v2.version_aliases)    # ['campeao', 'default']
 ```
 
-Sem `parent_model`, o segundo upload criaria **um segundo modelo solto no catálogo**, com o mesmo nome e
-nenhuma relação com o primeiro — e o histórico se perderia.
-
-**Aliases** dão nome de negócio às versões: em vez de apontar para "versão 2", o endpoint aponta para
-`campeao` ou `producao`, e promover um retreino vira mover o alias. O alias **`default` é reservado** e
-acompanha a versão com `is_default_version=True`.
+- Sem `parent_model`, o segundo upload cria **um segundo modelo solto no catálogo**, com o mesmo nome e
+  nenhuma relação com o primeiro — o histórico se perde.
+- **Aliases** dão nome de negócio às versões: o endpoint aponta para `campeao` ou `producao`, e promover
+  um retreino vira mover o alias. O alias **`default` é reservado** e acompanha a versão com
+  `is_default_version=True`.
 
 > **`Model.list()` não mostra as versões.** Ele lista o **catálogo**: uma entrada por modelo, na versão
 > *default*. Depois da v1 e da v2, ele imprime **uma única linha** (a v2). Para ver todas:

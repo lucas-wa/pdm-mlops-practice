@@ -1,16 +1,10 @@
 # 05 — Encerramento e custos
 
-O documento mais importante da aula: encerra os recursos criados, **na ordem correta**, e configura o
-acompanhamento do consumo dos créditos.
-
-> **A turma usa créditos educacionais do Google Cloud — não há cobrança no cartão de ninguém.** Os
-> créditos, porém, são **finitos**: tudo o que fica ligado consome saldo que faria falta nas próximas
-> atividades. Encerrar é **higiene de ambiente**, e faz parte da entrega.
+Encerra os recursos criados **na ordem correta** e configura o acompanhamento do consumo dos créditos.
 
 > **Execute este checklist ao final da aula, com a turma, item a item.**
 >
-> O recurso que mais consome créditos — o **Endpoint com modelo implantado** — consome **por node-hora,
-> 24 horas por dia, mesmo sem nenhuma requisição**. Ele não desliga sozinho.
+> A turma usa **créditos educacionais** — não há cobrança no cartão de ninguém —, mas os créditos são **finitos**. O recurso que mais consome, o **Endpoint com modelo implantado**, consome **por node-hora, 24/7, mesmo sem requisição**, e não desliga sozinho. Encerrar é **higiene de ambiente** e faz parte da entrega.
 
 ---
 
@@ -23,11 +17,9 @@ acompanhamento do consumo dos créditos.
 | 3 | **Instância de TensorBoard** | Armazenamento, na ordem de **US$ 10/GiB/mês**. Nesta aula **não criamos nenhuma porque passamos `experiment_tensorboard=False`** no `aiplatform.init(...)` — sem esse parâmetro o SDK criaria uma sozinho | Média (se existir) |
 | 4 | **Modelo, versões e objetos no GCS** | Armazenamento, consumo baixo | Baixa |
 
-> **Dependência que quebra o teardown:** não é possível deletar um modelo ainda **implantado** em um
-> endpoint. É preciso fazer o **undeploy** primeiro — por isso o passo 1 vem antes do passo 4.
+> **Dependência que quebra o teardown:** não é possível deletar um modelo ainda **implantado**. É preciso fazer o **undeploy** antes — por isso o passo 1 vem antes do passo 4.
 
-> **Registrar modelo no Model Registry é GRATUITO.** Consome crédito o artefato no GCS (centavos) e,
-> principalmente, o **endpoint**.
+> **Registrar modelo no Model Registry é GRATUITO.** Consome crédito o artefato no GCS (centavos) e, principalmente, o **endpoint**.
 
 ---
 
@@ -39,7 +31,7 @@ acompanhamento do consumo dos créditos.
 2. Confirmar a região **`us-central1`**.
 3. Clicar em **`rf-preco-imoveis-endpoint`**.
 4. Na lista de modelos implantados, menu de três pontos da linha do modelo → **Undeploy model**.
-5. Confirmar e **aguardar a conclusão**. Enquanto o undeploy não terminar, os nós continuam consumindo.
+5. Confirmar e **aguardar a conclusão** — até terminar, os nós continuam consumindo.
 
 ### 2.2 Deleção do endpoint
 
@@ -57,18 +49,15 @@ acompanhamento do consumo dos créditos.
 
 ### 3.1 BigQuery Studio / Colab Enterprise (ambiente desta aula)
 
-Há auto-desligamento por inatividade (~**180 minutos**), mas **apagar o runtime é o que garante** o
-encerramento imediato.
+Há auto-desligamento por inatividade (~**180 minutos**), mas só apagar o runtime garante o encerramento imediato — desconectar o notebook **não** basta.
 
 1. Console → **Vertex AI** → **Colab Enterprise** → **Runtimes**.
 2. Confirmar a região **`us-central1`**.
 3. Selecionar o runtime da aula → **Delete**.
 
-Apenas desconectar o notebook **não** encerra o runtime.
-
 ### 3.2 Vertex AI Workbench (só se alguém usou)
 
-Workbench é uma **VM**: consome créditos enquanto ligada, mesmo sem notebook aberto.
+Workbench é uma **VM**: consome enquanto ligada, mesmo sem notebook aberto.
 
 1. Console → **Vertex AI** → **Workbench** → **Instances**.
 2. **Stop** — interrompe a computação.
@@ -81,14 +70,7 @@ Workbench é uma **VM**: consome créditos enquanto ligada, mesmo sem notebook a
 
 ## 4. Passo 3 — TensorBoard (verificação)
 
-> **Nesta aula NÃO criamos nenhuma instância de TensorBoard — porque passamos
-> `experiment_tensorboard=False` no `aiplatform.init(...)`.** As métricas-resumo do Experiments (`mae`,
-> `mae_baseline`) não exigem TensorBoard.
-
-**Sem esse parâmetro, o SDK cria uma instância *Default Tensorboard* automaticamente** ao associar o
-experimento. Por isso este passo é uma **verificação**: se alguém rodou o `init` sem o parâmetro, a
-instância está lá, consumindo por **armazenamento** (na ordem de US$ 10/GiB/mês — confirme o valor atual
-no pricing ao vivo).
+Nesta aula **não criamos nenhuma instância**, porque o `aiplatform.init(...)` passa `experiment_tensorboard=False` — as métricas-resumo (`mae`, `mae_baseline`) não exigem TensorBoard. Sem esse parâmetro, o SDK cria uma *Default Tensorboard* automaticamente ao associar o experimento, e ela consome por **armazenamento** (ordem de US$ 10/GiB/mês — confirme no pricing ao vivo). Por isso este passo é uma **verificação**.
 
 1. Console → **Vertex AI** → **Experiments** → aba **TensorBoard instances**.
 2. Confirmar a região **`us-central1`**.
@@ -106,26 +88,21 @@ no pricing ao vivo).
 2. Clicar em **`rf-preco-imoveis`** → aba de **versões**.
 3. Deletar as **versões** (três pontos → *Delete version*) e depois o **modelo**.
 
-> Se a deleção falhar com erro de modelo em uso, **o undeploy do passo 1 não foi concluído**. Volte à
-> seção 2.
+> Se a deleção falhar com erro de modelo em uso, **o undeploy do passo 1 não foi concluído**. Volte à seção 2.
 
 ### 5.2 Objetos no bucket da aula
 
 1. Console → **Cloud Storage** → **Buckets** → **`${PROJECT_ID}-mlops-aula`**.
 2. Entrar em `models/` e excluir os objetos da aula.
 
-O SDK usa o mesmo bucket como **staging** e pode ter criado pastas auxiliares. Como
-`${PROJECT_ID}-mlops-aula` é dedicado a esta aula, é seguro esvaziá-lo por inteiro.
+O SDK usa o mesmo bucket como **staging** e pode ter criado pastas auxiliares. Como `${PROJECT_ID}-mlops-aula` é dedicado a esta aula, é seguro esvaziá-lo por inteiro.
 
 > **NÃO APAGUE A INFRAESTRUTURA COMPARTILHADA**
 >
-> - O bucket **`${PROJECT_ID}-aula-pdm`** é das aulas anteriores e será usado no Dia 2. **Não apague,
->   não esvazie.**
+> - O bucket **`${PROJECT_ID}-aula-pdm`** é das aulas anteriores e será usado no Dia 2. **Não apague, não esvazie.**
 > - O dataset **`aula_pdm`** e a **tabela gold** também permanecem. **Não apague.**
-> - Apagar por engano é **irreversível** e derruba o material das próximas aulas.
 >
-> Só o bucket com sufixo **`-mlops-aula`** contém artefatos desta aula. Confira o sufixo antes de
-> apagar qualquer coisa.
+> Apagar é **irreversível**. Só o bucket com sufixo **`-mlops-aula`** contém artefatos desta aula — confira o sufixo antes de apagar qualquer coisa.
 
 - [ ] Versões do modelo deletadas
 - [ ] Modelo `rf-preco-imoveis` deletado
@@ -136,8 +113,7 @@ O SDK usa o mesmo bucket como **staging** e pode ter criado pastas auxiliares. C
 
 ## 6. Budgets e alertas — acompanhar o consumo dos créditos
 
-Como a turma usa créditos educacionais, o budget não evita cobrança: ele **acompanha quanto dos créditos
-já foi consumido** e avisa quando algo consome mais que o esperado. Um budget **não bloqueia nada**.
+Com créditos educacionais, o budget não evita cobrança: ele **acompanha quanto já foi consumido** e avisa quando algo consome mais que o esperado. Um budget **não bloqueia nada**.
 
 1. Console → **Billing** → selecionar a conta de faturamento.
 2. Menu lateral → **Budgets & alerts** → **Create budget**.
@@ -152,10 +128,7 @@ já foi consumido** e avisa quando algo consome mais que o esperado. Um budget *
 
 ## 7. Créditos educacionais — o que eles cobrem
 
-- **Não há cobrança no cartão de ninguém.** O consumo sai do saldo de créditos do projeto. Não existe
-  "fatura surpresa" nesta atividade.
-- **Os créditos são finitos e não voltam.** Um endpoint esquecido queima crédito todo dia, e crédito
-  queimado não volta ao saldo. Por isso o teardown vale: é higiene de ambiente.
+O consumo sai do saldo de créditos do projeto: não existe "fatura surpresa" nesta atividade. Mas os créditos são **finitos e não voltam** — um endpoint esquecido queima saldo todo dia.
 
 Onde conferir: Console → **Billing** → **Overview**, no painel de créditos (saldo e validade).
 
@@ -198,9 +171,6 @@ Onde conferir: Console → **Billing** → **Overview**, no painel de créditos 
 ---
 
 Equivalentes em CLI e IaC: veja [`gcloud/README.md`](gcloud/README.md) e [`terraform/README.md`](terraform/README.md).
-O script [`gcloud/30_teardown.sh`](gcloud/30_teardown.sh) executa os passos 1 a 4 na mesma ordem, de
-forma idempotente — mas **na aula faça o teardown pelo console**, para que os alunos vejam cada recurso
-desaparecendo.
+O script [`gcloud/30_teardown.sh`](gcloud/30_teardown.sh) executa os passos 1 a 4 na mesma ordem, de forma idempotente — mas **na aula faça o teardown pelo console**, para que os alunos vejam cada recurso desaparecendo.
 
-Volte ao [`README.md`](README.md) para o índice, ou ao [`roteiro-condutor.md`](roteiro-condutor.md) para
-ver como este bloco se encaixa nos minutos 45–55.
+Índice: [`README.md`](README.md). Encaixe nos minutos 45–55: [`roteiro-condutor.md`](roteiro-condutor.md).

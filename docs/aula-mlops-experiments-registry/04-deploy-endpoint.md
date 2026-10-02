@@ -1,8 +1,6 @@
 # 04 — Deploy em Endpoint e predição online
 
-Cobre as **seções 8 e 9** do notebook
-[`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb): subir o
-modelo registrado num **Endpoint** do Vertex AI e fazer a primeira predição online.
+Seções **8 e 9** do notebook [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb): subir o modelo registrado num **Endpoint** e fazer a primeira predição online.
 
 | Item | Valor |
 | --- | --- |
@@ -14,33 +12,23 @@ modelo registrado num **Endpoint** do Vertex AI e fazer a primeira predição on
 
 > ## 💸 Este é o passo que mais consome créditos
 >
-> A turma usa **créditos educacionais** — não há cobrança em cartão. Mas um modelo implantado consome
-> **por node-hora, 24 horas por dia, mesmo sem nenhuma requisição**. Com `min-replica-count=1` há uma
-> `n1-standard-2` ligada até alguém desligá-la, e o endpoint **não** tem auto-desligamento.
+> A turma usa **créditos educacionais** — não há cobrança em cartão. Mas o modelo implantado consome **por node-hora, 24/7, mesmo sem requisição**: com `min-replica-count=1` há uma `n1-standard-2` ligada até alguém desligá-la, e o endpoint **não** tem auto-desligamento.
 >
-> Rode o checklist de [`05-encerramento-custos.md`](05-encerramento-custos.md) antes de encerrar a aula.
-> Undeploy e deleção do endpoint são o primeiro item da lista.
+> Rode o checklist de [`05-encerramento-custos.md`](05-encerramento-custos.md) antes de encerrar a aula — undeploy e deleção do endpoint são o primeiro item.
 
 > ## ⏱️ O deploy leva de 10 a 20 minutos
 >
-> **Dispare o deploy cedo**, assim que o modelo estiver registrado, e use o tempo de provisionamento
-> para discutir Experiments e Registry.
+> **Dispare o deploy cedo**, assim que o modelo estiver registrado, e use o provisionamento para discutir Experiments e Registry.
 >
-> **Contingência**: o docente mantém um **endpoint de referência já provisionado** para demonstrar a
-> predição caso o deploy do grupo não conclua a tempo — serve só para a demonstração, não conta como
-> entrega.
+> **Contingência**: o docente mantém um **endpoint de referência já provisionado** para demonstrar a predição se o deploy do grupo não concluir a tempo — serve só para a demonstração, não conta como entrega.
 >
-> **Erro transitório**: às vezes o deploy termina com `ERROR: ... System error. Please try this
-> operation again.` (falha de infraestrutura do Google, não do seu modelo). O endpoint continua criado
-> e **vazio não consome créditos**: basta **repetir o deploy**. Só investigue logs do container se
-> falhar de forma consistente.
+> **Erro transitório**: às vezes o deploy termina com `ERROR: ... System error. Please try this operation again.` — falha de infraestrutura do Google, não do seu modelo. O endpoint continua criado e **vazio não consome créditos**: **repita o deploy**. Só investigue logs do container se falhar de forma consistente.
 
 ---
 
 ## O contrato de entrada — leia antes de testar
 
-O container pré-construído entrega as `instances` ao `predict` como **array posicional**: não há nomes
-de coluna no payload. A única coisa que liga um número à feature certa é a **posição**.
+O container entrega as `instances` ao `predict` como **array posicional**: não há nomes de coluna no payload, só a **posição**.
 
 > ### ORDEM CANÔNICA DO VETOR DE FEATURES
 >
@@ -56,7 +44,7 @@ de coluna no payload. A única coisa que liga um número à feature certa é a *
 > | 3 | `banheiros` | int | `2` |
 > | 4 | `garagens` | int | `1` |
 
-Trocar `quartos` por `banheiros` no payload **não gera erro** — gera uma predição errada em silêncio.
+Trocar `quartos` por `banheiros` **não gera erro** — gera predição errada em silêncio.
 
 Payload de exemplo (duas instâncias):
 
@@ -77,8 +65,7 @@ Payload de exemplo (duas instâncias):
 
 1. Console → menu de navegação → **Vertex AI**.
 2. Menu lateral, *Deploy and use* → **Model Registry**. Região **us-central1**.
-3. Clique em **`rf-preco-imoveis`** → escolha a versão *default* → **Deploy & test** →
-   **Deploy to endpoint**.
+3. Clique em **`rf-preco-imoveis`** → versão *default* → **Deploy & test** → **Deploy to endpoint**.
 4. **Define your endpoint**:
    - *Create new endpoint*;
    - **Endpoint name**: `rf-preco-imoveis-endpoint`;
@@ -90,11 +77,9 @@ Payload de exemplo (duas instâncias):
    - **Minimum / Maximum number of compute nodes**: `1` e `1`;
    - **Accelerator**: nenhum; *Logging*: padrões.
 6. **Model monitoring** e **Explainability**: pule.
-7. **Deploy**. ⏱️ **Agora espere de 10 a 20 minutos.** O status aparece em **Vertex AI → Online
-   prediction → Endpoints**; enquanto estiver *Deploying*, o endpoint ainda não responde.
+7. **Deploy**. ⏱️ **Espere de 10 a 20 minutos.** O status fica em **Vertex AI → Online prediction → Endpoints**; enquanto estiver *Deploying*, o endpoint não responde.
 
-**Caminho alternativo:** **Vertex AI → Online prediction → Endpoints → Create** → nome
-`rf-preco-imoveis-endpoint`, região `us-central1` → depois **Add model**.
+**Caminho alternativo:** **Vertex AI → Online prediction → Endpoints → Create** → nome `rf-preco-imoveis-endpoint`, região `us-central1` → depois **Add model**.
 
 **Testar pelo console:**
 
@@ -148,7 +133,7 @@ print(resposta.deployed_model_id)
 
 ## 9. O teste de fechamento
 
-O que fecha a aula não é a predição em si — é conseguir dizer **qual versão do modelo respondeu**:
+O que fecha a aula não é a predição — é conseguir dizer **qual versão respondeu**:
 
 ```python
 resposta = endpoint.predict(instances=[[120.0, 150.0, 3, 2, 1]])
@@ -158,15 +143,13 @@ print("modelo  :", resposta.model_resource_name)
 print("versão  :", resposta.model_version_id)
 ```
 
-Sem isso, quando o número mudar amanhã, ninguém sabe dizer se mudou o modelo ou mudou o mundo. Essa
-rastreabilidade — experimento → versão registrada → versão servida — é o que a aula inteira construiu.
+Sem isso, quando o número mudar amanhã, ninguém sabe se mudou o modelo ou mudou o mundo. Essa rastreabilidade — experimento → versão registrada → versão servida — é o que a aula construiu.
 
 ---
 
 ## ⚠️ Antes de fechar o notebook
 
-O endpoint continua consumindo créditos. Vá agora para
-**[`05-encerramento-custos.md`](05-encerramento-custos.md)** e rode o checklist nesta ordem:
+O endpoint continua consumindo créditos. Vá para **[`05-encerramento-custos.md`](05-encerramento-custos.md)** e rode o checklist nesta ordem:
 
 1. undeploy do modelo no endpoint;
 2. deletar o endpoint;

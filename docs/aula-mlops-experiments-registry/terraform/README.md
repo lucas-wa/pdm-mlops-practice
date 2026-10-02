@@ -1,10 +1,10 @@
 # Caminho Terraform — o setup como código
 
-Provisiona declarativamente **só a base** da aula: APIs, bucket de artefatos e dataset BigQuery. A aula
-ao vivo usa o console; isto é **autoestudo**.
+Provisiona **só a base** da aula: APIs, bucket de artefatos e dataset BigQuery. A aula ao vivo usa o
+console; isto é **autoestudo**.
 
-O resto do tutorial (Experiments, registro de modelo, deploy) **não tem recurso no provider** — veja
-["O que o Terraform NÃO faz"](#o-que-o-terraform-não-faz) abaixo.
+Experiments, registro de modelo e deploy **não têm recurso no provider** — veja
+["O que o Terraform NÃO faz"](#o-que-o-terraform-não-faz).
 
 ## Arquivos
 
@@ -30,8 +30,8 @@ terraform plan
 terraform apply
 ```
 
-O `terraform.tfvars` não deve ser commitado. O Terraform **não** cria o projeto nem vincula faturamento:
-ambos são pré-requisitos.
+Não comite o `terraform.tfvars`. O Terraform **não** cria o projeto nem vincula faturamento: ambos são
+pré-requisitos.
 
 ## O que ele provisiona
 
@@ -141,19 +141,19 @@ Não é escolha didática: **os recursos não existem no provider**.
 
 Os três pontos que mais confundem:
 
-- **Não existe `google_vertex_ai_model`.** O upload é imperativo por natureza: depende de um
-  `model.joblib` que só existe depois do treino.
-- **Não existe nada para Experiments** — nem em Terraform, nem em `gcloud`. O experimento nasce do SDK.
-  O vizinho em IaC é `google_vertex_ai_tensorboard`, que **não usamos** (tarifado por armazenamento).
-  Atenção: `aiplatform.init(..., experiment=...)` **cria uma instância *Default Tensorboard* sozinho**
-  se você não passar `experiment_tensorboard=False` — o notebook da aula passa.
+- **Não existe `google_vertex_ai_model`.** O upload depende de um `model.joblib` que só existe depois do
+  treino.
+- **Não existe nada para Experiments** — nem em Terraform, nem em `gcloud`. O vizinho em IaC é
+  `google_vertex_ai_tensorboard`, que **não usamos** (tarifado por armazenamento). Atenção:
+  `aiplatform.init(..., experiment=...)` **cria uma instância *Default Tensorboard* sozinho** se você não
+  passar `experiment_tensorboard=False` — o notebook da aula passa.
 - **Não existe recurso para implantar o *seu* modelo.** `google_vertex_ai_endpoint` cria a casca vazia;
   associar uma versão a ela é SDK/gcloud. `google_vertex_ai_endpoint_with_model_garden_deployment`
   implanta modelos do **Model Garden**, não o seu, e `google_vertex_ai_deployment_resource_pool` cria um
   *pool* de máquinas, não o deployment.
 
-`google_workbench_instance` existe, caso a turma prefira Workbench. O argumento é `location` e espera
-uma **zona** (`us-central1-a`), não a região. Não usamos Workbench nesta aula.
+`google_workbench_instance` existe, caso a turma prefira Workbench. O argumento é `location` e espera uma
+**zona** (`us-central1-a`), não a região. Não usamos Workbench nesta aula.
 
 ## Teardown — não use `terraform destroy`
 
@@ -163,10 +163,8 @@ uma **zona** (`us-central1-a`), não a região. Não usamos Workbench nesta aula
 
 `terraform destroy` **não** encerra a aula, por dois motivos:
 
-1. Não remove o que mais custa — o **modelo implantado no endpoint** —, porque esses recursos não estão
-   sob Terraform.
-2. Tentaria destruir o dataset `aula_pdm`, que é infra compartilhada (por isso o `prevent_destroy = true`,
-   que faz o `destroy` falhar de propósito).
+1. Não remove o que mais custa — o **modelo implantado no endpoint** —, que não está sob Terraform.
+2. Tentaria destruir o dataset `aula_pdm`, que é infra compartilhada (daí o `prevent_destroy = true`).
 
 Use `bash gcloud/30_teardown.sh` ou o checklist de [`../05-encerramento-custos.md`](../05-encerramento-custos.md),
 que seguem a ordem correta (undeploy → endpoint → modelo → artefatos) e **nunca** tocam no bucket

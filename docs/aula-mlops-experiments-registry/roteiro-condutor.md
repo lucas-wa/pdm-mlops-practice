@@ -1,6 +1,6 @@
 # Roteiro do condutor — aula ao vivo no console (~60 min)
 
-Roteiro minuto a minuto para conduzir a aula **Introdução ao MLOps no GCP: Experiments + Model Registry no Vertex AI** pelo console, com o notebook aberto no BigQuery Studio.
+Roteiro minuto a minuto da aula **Introdução ao MLOps no GCP: Experiments + Model Registry no Vertex AI**, pelo console, com o notebook aberto no BigQuery Studio.
 
 Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md) · [`02-treino-e-experiments.md`](02-treino-e-experiments.md) · [`03-model-registry.md`](03-model-registry.md) · [`04-deploy-endpoint.md`](04-deploy-endpoint.md) · [`05-encerramento-custos.md`](05-encerramento-custos.md)
 
@@ -10,20 +10,20 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 
 - [ ] Ambiente do [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md) validado: APIs, IAM, bucket `${PROJECT_ID}-mlops-aula`, dataset `aula_pdm`.
 - [ ] **Nome real da tabela gold** confirmado e substituído no lugar de `GOLD_TABLE` no notebook.
-- [ ] Notebook [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) **executado de ponta a ponta no ensaio**, com tempo de cada célula anotado.
-- [ ] **Endpoint de referência já provisionado e respondendo** (contingência — ver seção de contingências).
+- [ ] Notebook [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) **executado de ponta a ponta no ensaio**, com o tempo de cada célula anotado.
+- [ ] **Endpoint de referência provisionado e respondendo** (contingência).
 - [ ] Rótulos do console conferidos no dia ("Gemini Enterprise Agent Platform" na documentação vs. "Vertex AI" no console).
-- [ ] Runtime do BigQuery Studio **já ligado e aquecido** — subir runtime ao vivo custa minutos que o roteiro não tem.
-- [ ] Abas do navegador pré-abertas: BigQuery Studio · Vertex AI Experiments · Model Registry · Online prediction → Endpoints · Billing → Budgets & alerts.
-- [ ] Budget do projeto já criado (acompanhamento do consumo de créditos), para mostrar na tela sem precisar configurar do zero.
+- [ ] Runtime do BigQuery Studio **ligado e aquecido** — subir runtime ao vivo custa minutos que o roteiro não tem.
+- [ ] Abas pré-abertas: BigQuery Studio · Vertex AI Experiments · Model Registry · Online prediction → Endpoints · Billing → Budgets & alerts.
+- [ ] Budget do projeto já criado (acompanhamento do consumo de créditos), para mostrar na tela sem configurar do zero.
 
-> **Regra de ouro do tempo.** O deploy leva de 10 a 20 minutos e **não acelera**. Dispare-o assim que o modelo estiver registrado e use o tempo de provisionamento para explicar Registry e Experiments. Esperando parado, a aula não fecha em 1 hora.
+> **Regra de ouro do tempo.** O deploy leva de 10 a 20 minutos e **não acelera**. Dispare-o assim que o modelo estiver registrado (por volta do minuto 26) e use o provisionamento para explicar Registry e Experiments. Esperando parado, a aula não fecha em 1 hora.
 
 ---
 
 ## 00–05 min · Contexto e objetivos
 
-**Objetivo do bloco:** a turma entende o caminho completo antes de ver a primeira linha de código.
+**Objetivo do bloco:** a turma entende o caminho completo antes da primeira linha de código.
 
 | Ação | Como conduzir |
 |---|---|
@@ -41,7 +41,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 
 ## 05–20 min · Treino + Vertex AI Experiments
 
-**Objetivo do bloco:** um modelo treinado, comparado com o baseline, e **duas runs** visíveis no console.
+**Objetivo do bloco:** modelo treinado, comparado com o baseline, e **duas runs** visíveis no console.
 
 | Tempo | Ação | Fala-chave |
 |---|---|---|
@@ -58,7 +58,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 
 > **Checkpoint — o que os alunos devem ter na tela**
 >
-> Notebook com MAE do modelo e MAE do baseline impressos, e a tela de comparação do Experiments mostrando as **duas runs** lado a lado com parâmetros e métricas.
+> Notebook com MAE do modelo e MAE do baseline impressos, e a tela de comparação do Experiments com as **duas runs** lado a lado.
 
 ---
 
@@ -68,7 +68,7 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 
 | Tempo | Ação | Fala-chave |
 |---|---|---|
-| 20–23 | Salvar o artefato | `model.joblib` em `gs://${PROJECT_ID}-mlops-aula/models/rf/`. Enfatizar: o nome do arquivo **precisa ser `model.joblib`** — é o que o container de serving procura |
+| 20–23 | Salvar o artefato | `model.joblib` em `gs://${PROJECT_ID}-mlops-aula/models/rf/`. O nome do arquivo **precisa ser `model.joblib`** — é o que o container de serving procura |
 | 23–26 | Registrar o modelo | Display name `rf-preco-imoveis`, `artifact_uri` apontando para o **diretório** (não para o arquivo), container de serving scikit-learn |
 | 26–27 | **Disparar o deploy agora** | Ver bloco 30–45. **Não espere** — inicie o deploy neste minuto e continue explicando |
 | 27–29 | Nova versão | Registrar uma segunda versão com `parent_model`, mostrar `version_aliases` e `default` |
@@ -76,11 +76,9 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 
 **Conceito a fixar:** registrar um modelo é **gratuito**. O que separa "treinei" de "publiquei" é uma decisão explícita — o alias `default` é essa decisão, escrita de forma que um serviço consiga ler.
 
-> **Antecipe o deploy.** O comando de deploy do bloco seguinte deve ser disparado por volta do minuto 26. A partir daí, tudo o que você fala sobre versões e aliases roda em paralelo com o provisionamento.
-
 > **Checkpoint — o que os alunos devem ter na tela**
 >
-> Model Registry com `rf-preco-imoveis` listado, duas versões visíveis, e o alias `default` apontando para a versão escolhida. Deploy em andamento na aba de Endpoints.
+> Model Registry com `rf-preco-imoveis` listado, duas versões visíveis, alias `default` apontando para a versão escolhida, e o deploy em andamento na aba de Endpoints.
 
 ---
 
@@ -91,16 +89,16 @@ Material de apoio: [`README.md`](README.md) · [`00-pre-requisitos-e-gold.md`](0
 | Tempo | Ação | Fala-chave |
 |---|---|---|
 | ~26 | (já disparado) Criar endpoint + deploy | `rf-preco-imoveis-endpoint`, máquina pequena, **1 réplica** |
-| 30–36 | Explicar **enquanto provisiona** | O que é um endpoint, o que é uma réplica, por que isso custa por hora mesmo sem tráfego. Mostrar a tela de progresso |
+| 30–36 | Explicar **enquanto provisiona** | O que é um endpoint, o que é uma réplica, por que custa por hora mesmo sem tráfego. Mostrar a tela de progresso |
 | 36–40 | Ordem canônica das features | Escrever na tela: `[area_util, area_total, quartos, banheiros, garagens]`. "Trocar a ordem não dá erro. Dá resposta errada." |
 | 40–43 | Predição online | Enviar o payload e ler o preço estimado. Conferir **qual versão do modelo** respondeu |
 | 43–45 | Sanidade da resposta | Comparar a predição com a mediana do baseline. "Esse número faz sentido para um imóvel assim?" |
 
-**Conceito a fixar:** este é o ponto em que o modelo deixa de ser um arquivo e vira um serviço — e o momento exato em que ele começa a custar dinheiro continuamente.
+**Conceito a fixar:** aqui o modelo deixa de ser um arquivo e vira um serviço — e passa a custar continuamente.
 
 > **Checkpoint — o que os alunos devem ter na tela**
 >
-> Endpoint `rf-preco-imoveis-endpoint` com status ativo e o modelo implantado, e uma resposta de `/predict` com um valor de preço plausível.
+> Endpoint `rf-preco-imoveis-endpoint` ativo com o modelo implantado, e uma resposta de `/predict` com valor de preço plausível.
 
 ### Contingências deste bloco
 
@@ -121,18 +119,18 @@ Conduzir **junto com a turma**, item a item, seguindo [`05-encerramento-custos.m
 
 | Tempo | Ação |
 |---|---|
-| 45–47 | **Undeploy** do modelo no endpoint, depois **deletar o endpoint**. Explicar por que esta é a ordem: não se apaga o modelo com ele implantado |
+| 45–47 | **Undeploy** do modelo no endpoint, depois **deletar o endpoint**. Explicar a ordem: não se apaga o modelo com ele implantado |
 | 47–49 | **Apagar o runtime** do notebook (BigQuery Studio / Colab Enterprise). Se alguém usou Workbench, **Stop** e **Delete** da instância |
 | 49–50 | **TensorBoard**: nesta aula **não criamos nenhuma instância porque o `aiplatform.init(...)` passa `experiment_tensorboard=False`**. Sem esse parâmetro, **o SDK cria uma *Default Tensorboard* sozinho** ao associar o experimento — por isso conferimos a lista mesmo assim. Consome por armazenamento (ordem de US$ 10/GiB/mês — confirmar no pricing ao vivo) |
 | 50–52 | Deletar **versões e modelo** e os **objetos no GCS da aula** (`gs://${PROJECT_ID}-mlops-aula/`) |
-| 52–54 | **Budget e alertas**: mostrar Billing → **Budgets & alerts** na tela; explicar que serve para acompanhar o consumo dos créditos e que o alerta avisa, não bloqueia |
+| 52–54 | **Budget e alertas**: mostrar Billing → **Budgets & alerts** na tela; serve para acompanhar o consumo dos créditos, e o alerta avisa, não bloqueia |
 | 54–55 | **Varredura final**: percorrer a caixa "Confira que nada ficou ligado" do [`05-encerramento-custos.md`](05-encerramento-custos.md) |
 
 > **Reforço obrigatório em voz alta**
 >
-> **NÃO apagar** o bucket compartilhado `${PROJECT_ID}-aula-pdm` nem o dataset `aula_pdm`. São infraestrutura das aulas anteriores e serão usados no Dia 2. Apagar é irreversível.
-
-> **Créditos educacionais — diga em voz alta.** A turma usa créditos educacionais do Google Cloud: **ninguém será cobrado no cartão**. Mas os créditos são **finitos e não voltam** — um endpoint esquecido queima saldo todo dia. O teardown é higiene de ambiente.
+> **NÃO apagar** o bucket compartilhado `${PROJECT_ID}-aula-pdm` nem o dataset `aula_pdm`: são infraestrutura das aulas anteriores, serão usados no Dia 2, e apagar é irreversível.
+>
+> Os créditos educacionais são **finitos e não voltam** — um endpoint esquecido queima saldo todo dia. O teardown é higiene de ambiente.
 
 > **Checkpoint — o que os alunos devem ter na tela**
 >
@@ -163,7 +161,7 @@ Cabe em **60 minutos** quando o ensaio foi feito e o deploy é antecipado. Na pr
 | ***Fallback* rápido — sem deploy** | ~40 min | Percorrer treino → Experiments → Registry. Demonstrar a predição no **endpoint de referência** em 3 minutos e ir para o encerramento |
 | **Turma travada no ambiente** | variável | Usar o projeto do docente como referência única na tela; alunos acompanham sem executar, e a prática vira tarefa assistida |
 
-**O que nunca cortar:** o bloco **45–55 (encerramento e consumo de créditos)** — é o único cuja ausência deixa recursos ligados queimando os créditos da disciplina. Corte a segunda versão, a segunda run, a predição ao vivo — o teardown fica.
+**O que nunca cortar:** o bloco **45–55 (encerramento e consumo de créditos)** — é o único cuja ausência deixa recursos ligados queimando os créditos da disciplina.
 
 **O que cortar primeiro, nesta ordem:**
 

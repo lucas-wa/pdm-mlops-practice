@@ -1,6 +1,6 @@
 # Introdução ao MLOps no GCP: Experiments + Model Registry no Vertex AI
 
-Tutorial de aproximadamente 1 hora, conduzido ao vivo pelo console do Google Cloud, que parte da camada **gold** de anúncios de imóveis (BigQuery, dataset `aula_pdm`, região `us-central1`) e chega a um modelo treinado, rastreado, versionado e servido em um endpoint de predição online.
+Tutorial de ~1 hora, ao vivo pelo console do Google Cloud: da camada **gold** do BigQuery (dataset `aula_pdm`, `us-central1`) a um modelo treinado, rastreado, versionado e servido em endpoint de predição online.
 
 > **AVISO DE CONSUMO DE CRÉDITOS — LEIA ANTES DE COMEÇAR**
 >
@@ -14,45 +14,43 @@ Tutorial de aproximadamente 1 hora, conduzido ao vivo pelo console do Google Clo
 
 ## 1. O que é MLOps, em três frases
 
-**Vertex AI Experiments** guarda o histórico de cada treino — parâmetros, métricas e artefatos — para comparar duas execuções em vez de discuti-las de memória. **Vertex AI Model Registry** guarda o modelo como objeto versionado, com identidade e alias, separando "treinei um modelo" de "este é o modelo oficial". **Vertex AI Endpoint** publica uma versão registrada atrás de uma API HTTP.
+**Vertex AI Experiments** guarda o histórico de cada treino — parâmetros, métricas e artefatos. **Vertex AI Model Registry** guarda o modelo como objeto versionado, com identidade e alias. **Vertex AI Endpoint** publica uma versão registrada atrás de uma API HTTP.
 
-MLOps liga essas três coisas: **rastrear** o que foi feito, **versionar** o que foi produzido e **publicar** o que foi aprovado — de forma que outra pessoa consiga reproduzir, auditar e reverter.
+MLOps liga as três: **rastrear**, **versionar** e **publicar**, de forma que outra pessoa consiga reproduzir, auditar e reverter.
 
 ## 2. Objetivos de aprendizagem
 
-Ao final da aula, o aluno deve ser capaz de:
-
-1. Ler a camada gold do BigQuery e montar um conjunto de treino/validação/teste respeitando o contrato de dados (dedup por imóvel, exclusão de colunas que vazam o alvo).
-2. Treinar um pipeline scikit-learn (`RandomForestRegressor`) para prever `preco` e comparar seu **MAE** com o **baseline da mediana**.
-3. Registrar parâmetros e métricas de **duas execuções** no experimento `preco-imoveis-rf` e compará-las no console do Vertex AI Experiments.
-4. Registrar o modelo como `rf-preco-imoveis` no Model Registry, criar uma **nova versão** e entender o papel do alias `default`.
-5. Implantar a versão em um **Endpoint** (`rf-preco-imoveis-endpoint`) e obter uma **predição online** com o payload na ordem canônica de features.
+1. Ler a gold do BigQuery e montar treino/validação/teste respeitando o contrato de dados.
+2. Treinar um pipeline scikit-learn (`RandomForestRegressor`) para prever `preco` e comparar o **MAE** com o **baseline da mediana**.
+3. Registrar **duas execuções** no experimento `preco-imoveis-rf` e compará-las no console.
+4. Registrar o modelo como `rf-preco-imoveis`, criar uma **nova versão** e entender o alias `default`.
+5. Implantar a versão em `rf-preco-imoveis-endpoint` e obter uma **predição online** na ordem canônica de features.
 6. Executar o **checklist de encerramento** e explicar qual recurso consome quanto crédito.
 
 ## 3. Pré-requisitos
 
 | Item | Detalhe |
 |---|---|
-| Projeto GCP | Um projeto próprio com **faturamento (billing) ativo**, vinculado aos **créditos educacionais** da disciplina. |
-| Acessos | Cada aluno é **`Owner` do próprio projeto** — `roles/owner` já cobre tudo (Vertex AI, Storage, BigQuery, habilitar APIs) e **não é preciso conceder nenhum papel**. Os papéis mínimos em [`01-setup-gcp.md`](01-setup-gcp.md) são referência para projeto compartilhado. |
+| Projeto GCP | Projeto próprio com **faturamento ativo**, vinculado aos **créditos educacionais** da disciplina. |
+| Acessos | Cada aluno é **`Owner` do próprio projeto** — `roles/owner` já cobre tudo e **não é preciso conceder nenhum papel**. Os papéis mínimos em [`01-setup-gcp.md`](01-setup-gcp.md) são referência para projeto compartilhado. |
 | Região | Todos os recursos em **`us-central1`**, para casar com o dataset do BigQuery. |
-| Camada gold | Tabela gold de anúncios já existente no dataset `aula_pdm`, com nome e schema **confirmados antes da aula**. |
-| Ambiente | **BigQuery Studio** (runtime Colab Enterprise) — não é necessário instalar nada na máquina local. |
+| Camada gold | Tabela gold no dataset `aula_pdm`, com nome e schema **confirmados antes da aula**. |
+| Ambiente | **BigQuery Studio** (runtime Colab Enterprise) — nada a instalar na máquina local. |
 | Conhecimento | Python básico, pandas e noções de treino/validação/teste. |
 
-O detalhamento dos pré-requisitos e o **contrato de dados** estão em [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md). Leia antes da aula.
+Contrato de dados e detalhamento em [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md). Leia antes da aula.
 
 ## 4. Como esta aula é conduzida
 
-- **Ao vivo, pelo console.** Todo o caminho usa a interface do Google Cloud (Vertex AI → Experiments, Model Registry, Online prediction) e o notebook no BigQuery Studio. Os arquivos numerados `00`–`05` na raiz são esse caminho.
-- **gcloud e Terraform são autoestudo.** [`gcloud/`](gcloud/README.md) e [`terraform/`](terraform/README.md) reproduzem o mesmo resultado por linha de comando e por infraestrutura como código, para o aluno comparar depois da aula — **não** serão executados durante o encontro.
-- **Nem tudo tem equivalente em IaC.** Experiments, registro de modelo e deploy em endpoint **não são gerenciados pelo Terraform**; ficam em SDK, gcloud ou console. Detalhes em [`terraform/README.md`](terraform/README.md).
+- **Ao vivo, pelo console** (Vertex AI → Experiments, Model Registry, Online prediction) e pelo notebook no BigQuery Studio. Os arquivos `00`–`05` na raiz são esse caminho.
+- **gcloud e Terraform são autoestudo.** [`gcloud/`](gcloud/README.md) e [`terraform/`](terraform/README.md) reproduzem o mesmo resultado por CLI e IaC — **não** serão executados durante o encontro.
+- **Nem tudo tem equivalente em IaC.** Experiments, registro de modelo e deploy em endpoint ficam em SDK, gcloud ou console. Detalhes em [`terraform/README.md`](terraform/README.md).
 
-> **Nomes no console.** A documentação do Google já aparece como **"Gemini Enterprise Agent Platform"**, mas o **console ainda exibe "Vertex AI"** — os rótulos aqui seguem o console. Confirme os menus ao vivo antes da aula.
+> **Nomes no console.** A documentação do Google já aparece como **"Gemini Enterprise Agent Platform"**, mas o **console ainda exibe "Vertex AI"** — os rótulos aqui seguem o console.
 
 ## 5. Convenções de nomes
 
-Estes nomes são usados **exatamente assim** em todos os arquivos, notebooks e scripts desta aula.
+Usados **exatamente assim** em todos os arquivos, notebooks e scripts da aula.
 
 | Recurso | Valor |
 |---|---|
@@ -68,7 +66,7 @@ Estes nomes são usados **exatamente assim** em todos os arquivos, notebooks e s
 | Endpoint | `rf-preco-imoveis-endpoint` |
 | Ordem canônica de features (payload `/predict`) | `[area_util, area_total, quartos, banheiros, garagens]` |
 
-> **Atenção ao bucket.** `${PROJECT_ID}-mlops-aula` é criado **para esta aula** e pode ser esvaziado no encerramento. `${PROJECT_ID}-aula-pdm` é a infraestrutura **compartilhada** das aulas anteriores e **não deve ser apagada**.
+> **Atenção ao bucket.** `${PROJECT_ID}-mlops-aula` é criado **para esta aula** e pode ser esvaziado no encerramento. `${PROJECT_ID}-aula-pdm` é infraestrutura **compartilhada** e **não deve ser apagada**.
 
 ## 6. Agenda (~1 hora)
 
@@ -81,7 +79,7 @@ Estes nomes são usados **exatamente assim** em todos os arquivos, notebooks e s
 | 45–55 | Encerramento e consumo de créditos | Teardown executado ao vivo; budget configurado |
 | 55–60 | Fechamento | Entregas conferidas e ponte para o Dia 2 (orquestração/pipelines) |
 
-Com o deploy em endpoint, a aula pode esticar para **75–90 minutos**. O caminho **sem deploy** (treino → Experiments → Registry) é o *fallback* rápido quando o tempo apertar. Detalhes e contingências no [`roteiro-condutor.md`](roteiro-condutor.md).
+Com o deploy, a aula pode esticar para **75–90 minutos**. O caminho **sem deploy** (treino → Experiments → Registry) é o *fallback* quando o tempo apertar. Contingências no [`roteiro-condutor.md`](roteiro-condutor.md).
 
 ## 7. Estrutura do material
 
@@ -103,11 +101,11 @@ aula-mlops-experiments-registry/
 
 | Arquivo | Conteúdo |
 |---|---|
-| [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md) | Checklist de pré-requisitos, contrato de dados, anti-vazamento, dedup, baseline e como confirmar o schema da gold |
+| [`00-pre-requisitos-e-gold.md`](00-pre-requisitos-e-gold.md) | Pré-requisitos, contrato de dados, anti-vazamento, dedup, baseline e schema da gold |
 | [`01-setup-gcp.md`](01-setup-gcp.md) | APIs, IAM, bucket e dataset pelo console |
-| [`02-treino-e-experiments.md`](02-treino-e-experiments.md) | Leitura da gold, treino do RandomForest, baseline, MAE e registro das runs no Experiments |
+| [`02-treino-e-experiments.md`](02-treino-e-experiments.md) | Leitura da gold, treino do RandomForest, baseline, MAE e runs no Experiments |
 | [`03-model-registry.md`](03-model-registry.md) | Salvar `model.joblib` no GCS, registrar `rf-preco-imoveis`, versões e aliases |
-| [`04-deploy-endpoint.md`](04-deploy-endpoint.md) | Criar `rf-preco-imoveis-endpoint`, implantar o modelo e fazer predição online |
+| [`04-deploy-endpoint.md`](04-deploy-endpoint.md) | Criar `rf-preco-imoveis-endpoint`, implantar o modelo e predizer online |
 | [`05-encerramento-custos.md`](05-encerramento-custos.md) | **Checklist de teardown**, budgets e alertas, créditos educacionais |
 | [`roteiro-condutor.md`](roteiro-condutor.md) | Roteiro minuto a minuto para o docente |
 | [`notebooks/treino_experiments_registry.ipynb`](notebooks/treino_experiments_registry.ipynb) | Notebook executável de ponta a ponta no BigQuery Studio |
