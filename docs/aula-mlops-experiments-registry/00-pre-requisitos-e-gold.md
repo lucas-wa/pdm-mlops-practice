@@ -144,11 +144,7 @@ Ele responde a uma pergunta única: **o modelo aprendeu alguma coisa?** Se o MAE
 
 A gold não tem schema fixo — cada turma construiu a sua. **Confirme antes da aula** o nome exato e as colunas, e substitua o placeholder `GOLD_TABLE` no notebook.
 
-> ### Não tem a gold, ou está mal formatada? Rode no Cloud Shell: `bash gcloud/seed_gold.sh`
->
-> O script [`gcloud/seed_gold.sh`](gcloud/seed_gold.sh) **valida** a gold (colunas do contrato e volume mínimo) e, só se ela estiver faltando ou inválida, **reconstrói** a partir da amostra de anúncios do repositório das aulas anteriores: cria o dataset se preciso, carrega a Bronze `anuncios` e materializa `aula_pdm.imoveis_gold` com dedup e filtros de sanidade.
->
-> Rodar com a gold boa não muda nada. Use `bash gcloud/seed_gold.sh --force` para reconstruir mesmo assim. Ele escreve apenas em `aula_pdm` — não toca em buckets nem em recursos de outras aulas.
+> **Não tem a gold, ou está mal formatada?** Rode [`gcloud/seed_gold.sh`](gcloud/seed_gold.sh) no Cloud Shell — instruções no **Passo 4** de [`01-setup-gcp.md`](01-setup-gcp.md).
 
 ### 3.1 Pelo console (caminho da aula)
 

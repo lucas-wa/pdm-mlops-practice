@@ -1,16 +1,10 @@
 # 01 — Setup da GCP pelo console
 
-Prepara o projeto para a aula de **Vertex AI Experiments + Model Registry + Endpoint**. Este é o caminho
-usado na condução ao vivo.
+Prepara o projeto para **Vertex AI Experiments + Model Registry + Endpoint**.
 
-> **Aviso de rebrand.** A documentação da Google já aparece como **"Gemini Enterprise Agent Platform"**,
-> mas **no console o produto continua rotulado "Vertex AI"**. Se um menu citado aqui estiver com outro
-> rótulo, procure o mesmo caminho sob o novo nome — serviços e APIs (`aiplatform.googleapis.com`) não
-> mudaram.
+> **Rebrand.** No console o produto ainda é "Vertex AI"; na doc pode aparecer "Gemini Enterprise Agent Platform". APIs não mudaram.
 
 ## Convenções desta aula
-
-Usadas por todos os materiais (notebook, scripts, Terraform). Trocar um nome quebra os passos seguintes.
 
 | Item | Valor |
 |---|---|
@@ -29,22 +23,16 @@ Usadas por todos os materiais (notebook, scripts, Terraform). Trocar um nome que
 | Arquivo do artefato | `gs://SEU_PROJECT_ID-mlops-aula/models/rf/model.joblib` |
 | Container de serving | `us-docker.pkg.dev/vertex-ai/prediction/sklearn-cpu.1-6:latest` |
 
-Dois pontos que costumam gerar confusão:
-
-1. O bucket da aula é **novo e dedicado** (`-mlops-aula`). O `-aula-pdm`, das aulas anteriores, **não é
-   tocado** por nada deste diretório.
-2. O `artifact_uri` do Model Registry aponta para o **diretório** (`.../models/rf/`), não para o arquivo.
-   E o arquivo **precisa** se chamar `model.joblib` (não `.pkl`), que é o nome procurado pelo container
-   pré-construído de scikit-learn.
+- O bucket da aula é novo e dedicado (`-mlops-aula`); nada aqui toca o `-aula-pdm`.
+- `artifact_uri` aponta para o **diretório** (`.../models/rf/`), e o arquivo **precisa** se chamar `model.joblib` — é o nome que o container scikit-learn procura.
 
 ---
 
 ## Passo 0 — Pré-requisitos
 
-1. Confirme o projeto correto no seletor, no topo da barra.
-2. **Billing > Overview**: o projeto precisa estar vinculado a uma conta de faturamento ativa. Se
-   aparecer "This project has no billing account", use **Billing > Link a billing account**.
-3. Anote o **Project ID** (não o *Project name* — são diferentes).
+- Projeto correto selecionado no seletor do topo.
+- **Billing > Overview**: projeto vinculado a uma conta de faturamento ativa.
+- Anote o **Project ID** (não o *Project name*).
 
 ---
 
@@ -53,28 +41,20 @@ Dois pontos que costumam gerar confusão:
 | API | Por quê |
 |---|---|
 | `aiplatform.googleapis.com` | **Obrigatória.** Experiments, Model Registry, Endpoints |
-| `storage.googleapis.com` | Guardar o `model.joblib` no Cloud Storage |
+| `storage.googleapis.com` | Guardar o `model.joblib` |
 | `bigquery.googleapis.com` | Ler a camada gold |
-| `compute.googleapis.com` | Máquinas do deploy e do runtime do notebook |
-| `notebooks.googleapis.com` | **Só se** a turma usar Vertex AI Workbench |
+| `compute.googleapis.com` | Máquinas do deploy |
+| `notebooks.googleapis.com` | **Só se** usar Vertex AI Workbench |
 
-1. **APIs & Services > Library**.
-2. Busque `Vertex AI API` → abra o card → **Enable**.
-3. Repita para `Cloud Storage API`, `BigQuery API` e `Compute Engine API`.
-4. Confira em **APIs & Services > Enabled APIs & services**.
-
-A Vertex AI API leva um ou dois minutos e habilita dependentes automaticamente.
+Em **APIs & Services > Library**, busque e habilite cada uma. Confira em **Enabled APIs & services**.
 
 ---
 
-## Passo 2 — IAM (opcional — você pode pular)
+## Passo 2 — IAM (opcional — pode pular)
 
-> **Cada aluno é `Owner` do próprio projeto.** `roles/owner` já concede tudo o que a aula precisa —
-> Vertex AI, Cloud Storage, BigQuery e habilitar APIs. **Não é preciso conceder nenhum papel.** Siga
-> direto para o Passo 3.
+> **Cada aluno é `Owner` do próprio projeto.** `roles/owner` já cobre tudo. **Não é preciso conceder nada** — siga para o Passo 3.
 
-O que segue é referência para **projeto compartilhado** ou **service account dedicada** (menor
-privilégio, o padrão correto fora da sala de aula).
+Referência para **projeto compartilhado** ou **service account dedicada**:
 
 | Papel | Para quê |
 |---|---|
@@ -83,57 +63,48 @@ privilégio, o padrão correto fora da sala de aula).
 | `roles/bigquery.dataViewer` | Ler a tabela gold |
 | `roles/bigquery.jobUser` | Executar as consultas |
 
-1. **IAM & Admin > IAM** → **Grant access**.
-2. Em **New principals**, o e-mail do usuário ou da conta de serviço.
-3. Em **Assign roles**, adicione um papel por vez com **+ Add another role**: `Vertex AI User`,
-   `Storage Object Admin`, `BigQuery Data Viewer`, `BigQuery Job User`.
-4. **Save**.
-
-Para criar a conta de serviço antes: **IAM & Admin > Service Accounts > Create service account** — pule
-a atribuição de papéis nessa tela e use o caminho acima.
+Conceder em **IAM & Admin > IAM > Grant access**: principal (usuário ou service account) + os papéis acima, um por vez com **+ Add another role**. Para criar a conta antes: **IAM & Admin > Service Accounts > Create service account**.
 
 ---
 
-## Passo 3 — Criar o bucket dedicado da aula
+## Passo 3 — Criar o bucket dedicado
 
-Separado do `-aula-pdm` para que o teardown possa esvaziá-lo sem risco de levar junto dados das aulas
-passadas.
+**Cloud Storage > Buckets > Create**:
 
-1. **Cloud Storage > Buckets** → **Create**.
-2. **Name your bucket**: `SEU_PROJECT_ID-mlops-aula` (nome é global; o prefixo do projeto costuma
-   resolver conflitos).
-3. **Choose where to store your data**: `Region` → `us-central1 (Iowa)` — a **mesma região** do dataset
-   BigQuery e dos recursos Vertex AI.
-4. **Choose a storage class**: `Standard`.
-5. **Choose how to control access**: marque **Enforce public access prevention**; **Access control**:
-   `Uniform`.
-6. **Choose how to protect object data**: padrão (`None`).
-7. **Create**.
+- **Name**: `SEU_PROJECT_ID-mlops-aula`
+- **Location**: `Region` → `us-central1 (Iowa)`
+- **Storage class**: `Standard`
+- **Access control**: `Uniform` + **Enforce public access prevention**
+- Demais opções: padrão → **Create**
 
 ---
 
-## Passo 4 — Confirmar (ou criar) o dataset `aula_pdm`
+## Passo 4 — Garantir a camada gold
 
-O dataset normalmente **já existe** desde as aulas anteriores. Aqui o objetivo é **confirmar**.
+**Se a gold já existe** — em **BigQuery > Explorer**:
 
-1. **BigQuery** (menu do console, sob *Analytics*).
-2. No painel **Explorer**, expanda o projeto e procure `aula_pdm`.
-3. Clique no dataset e confira, em **Details**, que **Data location** é `us-central1`.
-4. Expanda o dataset e **anote o nome exato da tabela gold**; na aba **Schema**, confira as colunas
-   (você vai precisar delas no notebook, no lugar do placeholder `GOLD_TABLE`).
-5. **Se não existir**: três pontos ao lado do projeto > **Create dataset** → *Dataset ID* `aula_pdm` →
-   *Location type* `Region` → `us-central1` → **Create dataset**.
+1. Expanda o projeto e abra `aula_pdm`; em **Details**, confirme **Data location** `us-central1`.
+2. Anote o **nome exato da tabela gold** (substitui `GOLD_TABLE` no notebook).
+3. Na aba **Schema**, confira as colunas.
+
+**Se não existe ou está mal formatada** — no **Cloud Shell**:
+
+```bash
+bash gcloud/seed_gold.sh
+```
+
+O script [`gcloud/seed_gold.sh`](gcloud/seed_gold.sh) valida a gold e, só se faltar ou estiver inválida, reconstrói a partir da amostra do repositório. Use `--force` para reconstruir mesmo com a gold válida.
+
+> Ele escreve **apenas no dataset `aula_pdm`** (BigQuery) — sem bucket, sem endpoint, sem custo por node-hora. Testado em Cloud Shell.
 
 ---
 
 ## Passo 5 — Verificação final
 
-Antes de abrir o notebook, confirme no console:
-
-- [ ] **APIs & Services > Enabled APIs**: `aiplatform`, `storage`, `bigquery`, `compute` habilitadas.
-- [ ] **Cloud Storage > Buckets**: `SEU_PROJECT_ID-mlops-aula` existe, em `us-central1`.
-- [ ] **BigQuery > Explorer**: dataset `aula_pdm` em `us-central1`, com a tabela gold.
-- [ ] **Vertex AI > Model Registry** abre em `us-central1` (lista vazia é resultado válido).
+- [ ] **Enabled APIs**: `aiplatform`, `storage`, `bigquery`, `compute`.
+- [ ] **Cloud Storage**: bucket `SEU_PROJECT_ID-mlops-aula` em `us-central1`.
+- [ ] **BigQuery**: dataset `aula_pdm` em `us-central1`, com a tabela gold.
+- [ ] **Vertex AI > Model Registry** abre em `us-central1` (lista vazia é válido).
 
 ---
 
